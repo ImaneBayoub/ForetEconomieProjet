@@ -1,0 +1,11 @@
+NOM,ANNREF,GEOGRAPHIE,CODE_GEO,N122_LIB,N122_MOD,N122,N110d_LIB,N110d_MOD,N110d,RA2020_001_DIM3_LIB,RA2020_001_DIM3_MOD,RA2020_001_DIM3,VALEUR_EXTRAPOLEE,VALEUR_BRUTE,NB_ETAB,IMPUTATION
+RA2020_001,2010,COM,01001,Classe de taille economique,Ensemble des exploitations,0,OTEX coef17,Toutes exploitations,0,Indicateurs,Nombre d exploitations,001,10,10,10,NON
+RA2020_001,2010,COM,01001,Classe de taille economique,1.Micro exploitations,0.1,OTEX coef17,Toutes exploitations,0,Indicateurs,Nombre d exploitations,001,,,1,NON
+RA2020_001,2010,COM,01001,Classe de taille economique,2.Petites exploitations,0.2,OTEX coef17,Toutes exploitations,0,Indicateurs,Nombre d exploitations,001,4,4,4,NON
+RA2020_001,2010,COM,01001,Classe de taille economique,3.Moyennes exploitations,0.3,OTEX coef17,Toutes exploitations,0,Indicateurs,Nombre d exploitations,001,,,1,NON
+RA2020_001,2010,COM,01001,Classe de taille economique,4.Grandes exploitations,0.4,OTEX coef17,Toutes exploitations,0,Indicateurs,Nombre d exploitations,001,4,4,4,NON
+RA2020_001,2010,COM,01001,Classe de taille economique,Ensemble des exploitations,0,OTEX coef17,Exploitations specialisees en grandes cultures,0.11,Indicateurs,Nombre d exploitations,001,2,2,2,NON
+RA2020_001,2010,COM,01001,Classe de taille economique,1.Micro exploitations,0.1,OTEX coef17,Exploitations specialisees en grandes cultures,0.11,Indicateurs,Nombre d exploitations,001,,,0,NON
+RA2020_001,2010,COM,01001,Classe de taille economique,2.Petites exploitations,0.2,OTEX coef17,Exploitations specialisees en grandes cultures,0.11,Indicateurs,Nombre d exploitations,001,,,2,NON
+RA2020_001,2010,COM,01001,Classe de taille economique,3.Moyennes exploitations,0.3,OTEX coef17,Exploitations specialisees en grandes cultures,0.11,Indicateurs,Nombre d exploitations,001,,,0,NON
+RA2020_001,2010,COM,01001,Classe de taille economique,4.Grandes exploitations,0.4,OTEX coef17,Exploitations specialisees en grandes cultures,0.11,Indicateurs,Nombre d exploitations,001,,,0,NON
