@@ -7,7 +7,7 @@ library(exactextractr)
 # 1. Charger les communes IGN
 # -------------------------------
 communes <- st_read(
-  "data/admin_express/ADMIN-EXPRESS_4-0__GPKG_LAMB93_FXX_2025-11-20/ADMIN-EXPRESS/1_DONNEES_LIVRAISON_2025-11-00136/ADE_4-0_GPKG_LAMB93_FXX-ED2025-11-20/ADE_4-0_GPKG_LAMB93_FXX-ED2025-11-20.gpkg",
+  "C:\\Users\\fanny\\Desktop\\ENSAE\\Cours\\Projet ESSD\\data\\ADMIN-EXPRESS_4-0__GPKG_LAMB93_FXX_2025-11-20\\ADMIN-EXPRESS\\1_DONNEES_LIVRAISON_2025-11-00136\\ADE_4-0_GPKG_LAMB93_FXX-ED2025-11-20\\ADE_4-0_GPKG_LAMB93_FXX-ED2025-11-20.gpkg",
   layer = "COMMUNE"
 )
 

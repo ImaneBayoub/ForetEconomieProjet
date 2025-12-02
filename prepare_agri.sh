@@ -3,8 +3,7 @@
 echo " Nettoyage des données 2010..."
 
 # 1) Garder les colonnes utiles
-xan select ANNREF,CODE_GEO,N110d,N110d_MOD,RA2020_001_DIM3_MOD,VALEUR_BRUTE,NB_ETAB data/data_commune_2010.csv \
-    > data/clean_2010_step1.csv
+xan select ANNREF,CODE_GEO,N110d,N110d_MOD,RA2020_001_DIM3_MOD,VALEUR_BRUTE,NB_ETAB C:\Users\fanny\Desktop\ENSAE\Cours\Projet ESSD\data\Fermes\FDS_RA2020_001_2010.csv
 
 # 2) Enlever "Toutes exploitations"
 xan filter 'ne(N110d_MOD, "Toutes exploitations")' data/clean_2010_step1.csv \
