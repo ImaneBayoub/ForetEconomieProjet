@@ -3,11 +3,13 @@ library(terra)
 library(dplyr)
 library(exactextractr)
 
+DATADIR <- "C://Users//fanny//Desktop//ENSAE//Cours//Projet-ESSD//data"
 # -------------------------------
 # 1. Charger les communes IGN
 # -------------------------------
+DATADIR_COMMUNES <- file.path(DATADIR, "Communes_IGN//ADMIN-EXPRESS_4-0__GPKG_LAMB93_FXX_2025-11-20//1_DONNEES_LIVRAISON_2025-11-00136//ADE_4-0_GPKG_LAMB93_FXX-ED2025-11-20")
 communes <- st_read(
-  "C:\\Users\\fanny\\Desktop\\ENSAE\\Cours\\Projet ESSD\\data\\ADMIN-EXPRESS_4-0__GPKG_LAMB93_FXX_2025-11-20\\ADMIN-EXPRESS\\1_DONNEES_LIVRAISON_2025-11-00136\\ADE_4-0_GPKG_LAMB93_FXX-ED2025-11-20\\ADE_4-0_GPKG_LAMB93_FXX-ED2025-11-20.gpkg",
+  file.path(DATADIR_COMMUNES, "ADE_4-0_GPKG_LAMB93_FXX-ED2025-11-20.gpkg"),
   layer = "COMMUNE"
 )
 
@@ -17,8 +19,9 @@ print(st_crs(communes))   # EPSG:2154
 # -------------------------------
 # 2. Charger rasters forêt (déjà 0/1)
 # -------------------------------
-forest2012 <- rast("data/forest2012.tif")
-forest2018 <- rast("data/forest2018.tif")
+DATADIR_FOREST <- file.path(DATADIR, "Forêts")
+forest2012 <- rast(file.path(DATADIR_FOREST, "forest2012.tif"))
+forest2018 <- rast(file.path(DATADIR_FOREST, "forest2018.tif"))
 
 cat("\n=== CRS rasters forêt ===\n")
 print(crs(forest2012))    # EPSG:3035
@@ -48,7 +51,8 @@ cat("\nNA 2018 = ", sum(is.na(communes_3035$part_foret_2018)), "\n")
 # -------------------------------
 # 5. Jointure INSEE
 # -------------------------------
-df_insee <- read.csv("data/agri_all_clean.csv")
+DATADIR_FERMES <- file.path(DATADIR, "Fermes")
+df_insee <- read.csv(file.path(DATADIR_FERMES, "agri_all_clean.csv"))
 
 resultat <- df_insee %>%
   left_join(
@@ -66,6 +70,6 @@ print(codes_orphelins)
 # -------------------------------
 # 6. Export
 # -------------------------------
-write.csv(resultat, "data/resultat_avec_foret.csv", row.names = FALSE)
+write.csv(resultat, file.path(DATADIR, "fermes_communes_forets.csv"), row.names = FALSE)
 
 cat("\n>>> Extraction forêt + jointure terminées ✓ <<<\n")
