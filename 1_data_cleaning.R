@@ -1,16 +1,16 @@
 
-#data
-#base_agri2010 <- fread("FDS_G_2047_2010.txt", sep = ";", encoding = "Latin-1", fill = TRUE, header = FALSE)
-#base_agri2000 <- fread("FDS_G_2047_2000.txt", sep = ";", encoding = "Latin-1", fill = TRUE, header = FALSE)
-#base_agri1988 <- fread("FDS_G_2047_1988.txt", sep = ";", encoding = "Latin-1", fill = TRUE, header = FALSE)
-#base_agri1979 <- fread("FDS_G_2047_1979.txt", sep = ";", encoding = "Latin-1", fill = TRUE, header = FALSE)
-#base_agri1970 <- fread("FDS_G_2047_1970.txt", sep = ";", encoding = "Latin-1", fill = TRUE, header = FALSE)
+# data
+# base_agri2010 <- fread("FDS_G_2047_2010.txt", sep = ";", encoding = "Latin-1", fill = TRUE, header = FALSE)
+# base_agri2000 <- fread("FDS_G_2047_2000.txt", sep = ";", encoding = "Latin-1", fill = TRUE, header = FALSE)
+# base_agri1988 <- fread("FDS_G_2047_1988.txt", sep = ";", encoding = "Latin-1", fill = TRUE, header = FALSE)
+# base_agri1979 <- fread("FDS_G_2047_1979.txt", sep = ";", encoding = "Latin-1", fill = TRUE, header = FALSE)
+# base_agri1970 <- fread("FDS_G_2047_1970.txt", sep = ";", encoding = "Latin-1", fill = TRUE, header = FALSE)
 
-#write_parquet("base_agri2010.parquet",x = base_agri2010)
-#write_parquet("base_agri2000.parquet",x = base_agri2000)
-#write_parquet("base_agri1988.parquet",x = base_agri1988)
-#write_parquet("base_agri1979.parquet",x = base_agri1979)
-#write_parquet("base_agri1970.parquet",x = base_agri1970)
+# write_parquet("base_agri2010.parquet",x = base_agri2010)
+# write_parquet("base_agri2000.parquet",x = base_agri2000)
+# write_parquet("base_agri1988.parquet",x = base_agri1988)
+# write_parquet("base_agri1979.parquet",x = base_agri1979)
+# write_parquet("base_agri1970.parquet",x = base_agri1970)
 
 agri2010 = read_parquet("base_agri2010.parquet")
 agri2000 = read_parquet("base_agri2000.parquet")
@@ -212,4 +212,4 @@ foret = clc1990 %>%
 
 
 
-#write.csv(x = foret, "foret.csv")
+# write.csv(x = foret, "foret.csv")

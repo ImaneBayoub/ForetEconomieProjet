@@ -1,0 +1,227 @@
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(mgcv)
+
+twfe_data = read.csv("data/twfe_data.csv")
+
+df <- twfe_data %>%
+  group_by(id) %>%
+  filter(n() == 3) %>%
+  ungroup() %>%
+  select(id, time, D = prop_foret_alt, Y = ratio_prod_surface) %>%
+  pivot_wider(
+    names_from = time,
+    values_from = c(D, Y),
+    names_sep = ""
+  ) %>%
+  mutate(
+    # Analyse principale (t1 à t2)
+    delta_D    = D2 - D1,
+    delta_Y    = Y2 - Y1,
+    S          = as.integer(delta_D != 0),
+    
+    # Test Placebo (t2 à t3)
+    delta_Y_12 = Y2 - Y1, # Identique à delta_Y
+    delta_D_23 = D3 - D2
+  )
+
+
+################################################################################
+# 1. Test des tendances parallèles (placebo)
+################################################################################
+
+# On teste si le changement FUTUR du traitement (D2 à D3)
+# explique le changement PASSÉ du résultat (Y1 à Y2)
+
+## 1.1 Test linéaire
+model_placebo <- lm(delta_Y_12 ~ D1 + delta_D_23, data = df)
+summary(model_placebo)
+
+#             Estimate Std. Error t value Pr(>|t|)  
+# (Intercept)  0.03880    0.02011   1.929   0.0537 .
+# D1           0.02041    0.06879   0.297   0.7667
+# delta_D_23  -0.17423    0.48496  -0.359   0.7194
+
+# L'hypothèse de tendances parallèles est validée (p-value > 0.05 pour delta_D_23).
+
+## 1.2 Test non-paramétrique
+# On utilise une régression non-paramétrique (GAM) pour tester la relation entre delta_Y_12 et D1, ainsi que delta_D_23.
+# Si les fonctions de lissage ne sont pas significatives, cela suggère que les tendances parallèles sont plausibles.
+
+placebo_gam_int <- gam(
+  delta_Y_12 ~ s(D1) + ti(D1, delta_D_23),
+  data = df
+)
+
+summary(placebo_gam_int)
+# Approximate significance of smooth terms:
+#                     edf Ref.df     F p-value
+# s(D1)             6.620  7.755 0.737   0.675
+# ti(D1,delta_D_23) 3.345  4.363 1.563   0.175
+
+# L'hypothèse de tendances parallèles est validée (p-value > 0.05 pour les fonctions de lissage).
+
+
+################################################################################
+# 2. Test de l'overlap condition
+################################################################################
+# Il faut que le support des Switchers soit inclus dans celui des Stayers (condition d'overlap)
+
+# On compare la distribution du traitement initial (D1) entre Switchers (S=1) et Stayers (S=0)
+ggplot(df, aes(x = D1, fill = factor(S))) +
+  geom_density(alpha = 0.4) +
+  scale_fill_manual(values = c("skyblue", "tomato"), 
+                    name = "Groupe", 
+                    labels = c("Stayers (S=0)", "Switchers (S=1)")) +
+  labs(title = "Test du Support Commun (Distribution de D1)",
+       x = "Niveau de forêt initial (D1)",
+       y = "Densité") +
+  theme_minimal()
+
+range(df$D1[df$S==1])
+range(df$D1[df$S==0])
+
+# > range(df$D1[df$S==1])
+# [1] 0.0000000 0.9929215
+# > range(df$D1[df$S==0])
+# [1] 0.0000000 0.9329911
+
+# Les switchers ont un support légèrement plus large que les stayers
+# On procède à un trimming pour enlever les observations qui n'ont pas de support commun
+
+
+################################################################################
+# 3. Trimming : enlever les observations qui n'ont pas de support commun.
+################################################################################
+# On enlève les observations dont D1 est en dessous du 5e percentile
+# ou au dessus du 95e percentile parmi les stayers.
+# On peut aussi enlever les switchers qui ont un changement de traitement très faible (delta_D proche de 0).
+
+lower <- quantile(df$D1[df$S==0], 0.05)
+upper <- quantile(df$D1[df$S==0], 0.95)
+
+df_trim <- df %>%
+  filter(
+    D1 >= lower,
+    D1 <= upper,
+    abs(delta_D) > 0.02 | S==0 # Suppression des quasi-switchers
+  )
+
+message("Nombre d'observations avant : ", nrow(df), 
+        " | Après : ", nrow(df_trim))
+
+# Nombre d'observations avant : 28550 | Après : 7589
+
+# Vérification du support commun après trimming
+ggplot(df_trim, aes(x = D1, fill = factor(S))) +
+  geom_density(alpha = 0.4) +
+  scale_fill_manual(values = c("skyblue", "tomato"), 
+                    name = "Groupe", 
+                    labels = c("Stayers (S=0)", "Switchers (S=1)")) +
+  labs(title = "Test du Support Commun (Distribution de D1)",
+       x = "Niveau de forêt initial (D1)",
+       y = "Densité") +
+  theme_minimal()
+
+range(df_trim$D1[df_trim$S==1])
+range(df_trim$D1[df_trim$S==0])
+
+# > range(df_trim$D1[df_trim$S==1])
+# [1] 0.0000000 0.4733817
+# > range(df_trim$D1[df_trim$S==0])
+# [1] 0.0000000 0.4733097
+
+# Les supports sont désormais alignés entre switchers et stayers, ce qui valide la condition d'overlap.
+
+table(df_trim$S)
+#    0    1 
+# 5427 2162
+
+
+################################################################################
+# 4. Calcul de l'estimateur AS sur l'échantillon trimmed
+################################################################################
+# Pour donner plus de poids à ceux qui ont un changement plus important.
+
+# 5.1. Estimation de la tendance chez les stayers (S=0)
+mod_stayers <- gam(delta_Y ~ s(D1), data=df_trim[df_trim$S==0,])
+
+# 5.2. Prédire le delta_Y "attendu" pour les switchers (S=1)
+switchers <- df_trim[df_trim$S == 1, ]
+switchers$delta_Y_hat <- predict(mod_stayers, newdata=switchers)
+
+# 5.3. Calcul de l'estimateur AS
+delta_AS <- with(switchers,
+  sum(delta_D * (delta_Y - delta_Y_hat)) /
+  sum(delta_D^2)
+)
+
+print(delta_AS)
+# [1] -0.2330814
+
+ggplot(df_trim, aes(D1, delta_Y, color=factor(S)))+
+  geom_point(alpha=.3)+
+  geom_smooth(method="gam", formula=y~s(x))+
+  theme_minimal()
+
+
+################################################################################
+# 5. Calcul de l'erreur standard par bootstrap
+################################################################################
+
+set.seed(123)
+n_bootstrap <- 1000
+boot_results <- numeric(n_bootstrap)
+
+# On crée une fonction pour isoler le calcul du delta_AS dans chaque échantillon bootstrap
+calculate_did_l <- function(data) {
+  # 1. Séparer Stayers et Switchers dans le jeu de données bootstrap
+  stayers_boot <- data[data$S == 0, ]
+  switchers_boot <- data[data$S == 1, ]
+  
+  if(nrow(stayers_boot) < 2 | nrow(switchers_boot) < 2) return(NA)
+  
+  # 2. Modèle sur Stayers
+  mod_stayers <- gam(delta_Y ~ s(D1), data = stayers_boot)
+  
+  # 3. Prediction et calcul delta
+  y_hat <- predict(mod_stayers, newdata = switchers_boot)
+  
+  delta <- sum(switchers_boot$delta_D * (switchers_boot$delta_Y - y_hat)) / 
+           sum(switchers_boot$delta_D^2)
+  return(delta)
+}
+
+# --- Boucle de Bootstrap ---
+for (i in 1:n_bootstrap) {
+    ids <- unique(df_trim$id)
+    boot_ids <- sample(ids, replace=TRUE)
+    boot_df <- df_trim[df_trim$id %in% boot_ids, ]
+    boot_results[i] <- calculate_did_l(boot_df)
+}
+
+# Nettoyage des NA éventuels (si un tirage manque de stayers/switchers)
+boot_results <- boot_results[!is.na(boot_results)]
+
+# --- Résultats Finaux ---
+se_delta <- sd(boot_results)
+t_stat   <- delta_AS / se_delta
+p_val    <- 2 * (1 - pnorm(abs(t_stat)))
+ci_low   <- quantile(boot_results, 0.025)
+ci_high  <- quantile(boot_results, 0.975)
+
+# Affichage propre
+cat("Estimateur AS :", round(delta_AS, 4), "\n",
+    "Erreur Standard  :", round(se_delta, 4), "\n",
+    "p-value          :", round(p_val, 4), "\n",
+    "IC 95%           : [", round(ci_low, 4), ";", round(ci_high, 4), "]\n")
+
+
+# Estimateur AS : -0.2331
+#  Erreur Standard  : 0.8786
+#  p-value          : 0.7908
+#  IC 95%           : [ -1.8458 ; 1.233 ]
+
+# Résultats non significatifs, avec un intervalle de confiance très large.
+# Cela suggère que l'effet estimé n'est pas statistiquement différent de zéro.
