@@ -160,11 +160,14 @@ delta_AS <- with(switchers,
 print(delta_AS)
 # [1] -0.2330814
 
+# Visualisation de la relation entre D1 et delta_Y, en différenciant switchers et stayers
 ggplot(df_trim, aes(D1, delta_Y, color=factor(S)))+
   geom_point(alpha=.3)+
   geom_smooth(method="gam", formula=y~s(x))+
   theme_minimal()
-
+# On dirait que pour des valeurs de D1 proches de 0 (peu de forêt), les switchers sont au-dessus des stayers
+# mais que pour des valeurs de D1 plus élevées, les switchers sont en dessous des stayers.
+# Cela pourrait expliquer l'estimateur AS négatif.
 
 ################################################################################
 # 5. Calcul de l'erreur standard par bootstrap
