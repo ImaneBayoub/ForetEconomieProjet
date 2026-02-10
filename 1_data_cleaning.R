@@ -54,12 +54,7 @@ agri2010 = agri2010 %>%
 
 #summary(lm(ratio_prod_surface~ production + superficie, data = agri2010))
 
-#>
-#>
-#>
-#>
-#>
-#>
+
 agri2000 = read_parquet("base_agri2000.parquet")
 
 colnames(agri2000) = tolower(c(agri2000[1,]))

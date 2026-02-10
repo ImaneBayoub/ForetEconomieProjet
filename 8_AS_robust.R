@@ -5,6 +5,7 @@ library(mgcv)
 
 twfe_data = read.csv("data/twfe_data.csv")
 
+
 df <- twfe_data %>%
   group_by(id) %>%
   filter(n() == 3) %>%
@@ -15,16 +16,23 @@ df <- twfe_data %>%
     values_from = c(D, Y),
     names_sep = ""
   ) %>%
-  mutate(
-    # Analyse principale (t1 à t2)
-    delta_D    = D2 - D1,
-    delta_Y    = Y2 - Y1,
-    S          = as.integer(delta_D != 0),
-    
-    # Test Placebo (t2 à t3)
-    delta_Y_12 = Y2 - Y1, # Identique à delta_Y
-    delta_D_23 = D3 - D2
-  )
+    mutate(
+      # (A) Analyse principale (t1 à t2) en niveau
+      delta_D    = D2 - D1,
+      delta_Y    = Y2 - Y1,
+      S          = as.integer(delta_D != 0),
+
+      # (B) Analyse principale en log (uniquement si Y>0)
+      delta_logY = ifelse(Y1 > 0 & Y2 > 0, log(Y2) - log(Y1), NA_real_),
+
+      # Test Placebo (t2 à t3) en niveau
+      delta_Y_12 = Y2 - Y1,
+      delta_D_23 = D3 - D2,
+
+      # Placebo en log (optionnel, mais propre)
+      delta_logY_12 = ifelse(Y1 > 0 & Y2 > 0, log(Y2) - log(Y1), NA_real_)
+    )
+
 
 
 ################################################################################
@@ -35,7 +43,7 @@ df <- twfe_data %>%
 # explique le changement PASSÉ du résultat (Y1 à Y2)
 
 ## 1.1 Test linéaire
-model_placebo <- lm(delta_Y_12 ~ D1 + delta_D_23, data = df)
+model_placebo <- lm(delta_logY_12 ~ D1 + delta_D_23, data = df, na.action = na.omit)
 summary(model_placebo)
 
 #             Estimate Std. Error t value Pr(>|t|)  
@@ -50,11 +58,13 @@ summary(model_placebo)
 # Si les fonctions de lissage ne sont pas significatives, cela suggère que les tendances parallèles sont plausibles.
 
 placebo_gam_int <- gam(
-  delta_Y_12 ~ s(D1) + ti(D1, delta_D_23),
-  data = df
+  delta_logY_12 ~ s(D1) + ti(D1, delta_D_23),
+  data = df,
+  na.action = na.omit
 )
-
 summary(placebo_gam_int)
+
+
 # Approximate significance of smooth terms:
 #                     edf Ref.df     F p-value
 # s(D1)             6.620  7.755 0.737   0.675
@@ -103,27 +113,24 @@ upper <- quantile(df$D1[df$S==0], 0.95)
 
 df_trim <- df %>%
   filter(
+    !is.na(delta_logY),      # <- AJOUTE ÇA
     D1 >= lower,
     D1 <= upper,
-    abs(delta_D) > 0.02 | S==0 # Suppression des quasi-switchers
+    abs(delta_D) > 0.005 | S==0
   )
 
 message("Nombre d'observations avant : ", nrow(df), 
         " | Après : ", nrow(df_trim))
 
+
 # Nombre d'observations avant : 28550 | Après : 7589
 
-# Vérification du support commun après trimming
-ggplot(df_trim, aes(x = D1, fill = factor(S))) +
-  geom_density(alpha = 0.4) +
-  scale_fill_manual(values = c("skyblue", "tomato"), 
-                    name = "Groupe", 
-                    labels = c("Stayers (S=0)", "Switchers (S=1)")) +
-  labs(title = "Test du Support Commun (Distribution de D1)",
-       x = "Niveau de forêt initial (D1)",
-       y = "Densité") +
-  theme_minimal()
 
+# Vérification du support commun après trimming
+ggplot(df_trim, aes(D1, delta_logY, color=factor(S)))+
+  geom_point(alpha=.3)+
+  geom_smooth(method="gam", formula=y~s(x))+
+  theme_minimal()
 range(df_trim$D1[df_trim$S==1])
 range(df_trim$D1[df_trim$S==0])
 
@@ -145,23 +152,23 @@ table(df_trim$S)
 # Pour donner plus de poids à ceux qui ont un changement plus important.
 
 # 5.1. Estimation de la tendance chez les stayers (S=0)
-mod_stayers <- gam(delta_Y ~ s(D1), data=df_trim[df_trim$S==0,])
+mod_stayers <- gam(delta_logY ~ s(D1), data=df_trim[df_trim$S==0,], na.action = na.omit)
 
 # 5.2. Prédire le delta_Y "attendu" pour les switchers (S=1)
 switchers <- df_trim[df_trim$S == 1, ]
-switchers$delta_Y_hat <- predict(mod_stayers, newdata=switchers)
+switchers$delta_logY_hat <- predict(mod_stayers, newdata = switchers)
 
 # 5.3. Calcul de l'estimateur AS
 delta_AS <- with(switchers,
-  sum(delta_D * (delta_Y - delta_Y_hat)) /
-  sum(delta_D^2)
+  sum(delta_D * (delta_logY - delta_logY_hat)) / sum(delta_D^2)
 )
+
 
 print(delta_AS)
 # [1] -0.2330814
 
 # Visualisation de la relation entre D1 et delta_Y, en différenciant switchers et stayers
-ggplot(df_trim, aes(D1, delta_Y, color=factor(S)))+
+ggplot(df_trim, aes(D1, delta_logY, color=factor(S)))+
   geom_point(alpha=.3)+
   geom_smooth(method="gam", formula=y~s(x))+
   theme_minimal()
@@ -177,32 +184,28 @@ set.seed(123)
 n_bootstrap <- 1000
 boot_results <- numeric(n_bootstrap)
 
-# On crée une fonction pour isoler le calcul du delta_AS dans chaque échantillon bootstrap
 calculate_did_l <- function(data) {
-  # 1. Séparer Stayers et Switchers dans le jeu de données bootstrap
   stayers_boot <- data[data$S == 0, ]
   switchers_boot <- data[data$S == 1, ]
-  
+
   if(nrow(stayers_boot) < 2 | nrow(switchers_boot) < 2) return(NA)
-  
-  # 2. Modèle sur Stayers
-  mod_stayers <- gam(delta_Y ~ s(D1), data = stayers_boot)
-  
-  # 3. Prediction et calcul delta
+
+  mod_stayers <- gam(delta_logY ~ s(D1), data = stayers_boot, na.action = na.omit)
   y_hat <- predict(mod_stayers, newdata = switchers_boot)
-  
-  delta <- sum(switchers_boot$delta_D * (switchers_boot$delta_Y - y_hat)) / 
-           sum(switchers_boot$delta_D^2)
+
+  delta <- sum(switchers_boot$delta_D * (switchers_boot$delta_logY - y_hat), na.rm = TRUE) /
+           sum(switchers_boot$delta_D^2, na.rm = TRUE)
+
   return(delta)
 }
 
-# --- Boucle de Bootstrap ---
 for (i in 1:n_bootstrap) {
-    ids <- unique(df_trim$id)
-    boot_ids <- sample(ids, replace=TRUE)
-    boot_df <- df_trim[df_trim$id %in% boot_ids, ]
-    boot_results[i] <- calculate_did_l(boot_df)
+  ids <- unique(df_trim$id)
+  boot_ids <- sample(ids, replace = TRUE)
+  boot_df <- df_trim[df_trim$id %in% boot_ids, ]
+  boot_results[i] <- calculate_did_l(boot_df)
 }
+
 
 # Nettoyage des NA éventuels (si un tirage manque de stayers/switchers)
 boot_results <- boot_results[!is.na(boot_results)]
@@ -228,3 +231,45 @@ cat("Estimateur AS :", round(delta_AS, 4), "\n",
 
 # Résultats non significatifs, avec un intervalle de confiance très large.
 # Cela suggère que l'effet estimé n'est pas statistiquement différent de zéro.
+
+
+################################################################################
+# 6. Choix du threshold pour définir les switchers
+################################################################################
+p_abs <- ggplot(df, aes(x = abs(delta_D))) +
+  geom_histogram(bins = 200, fill = "orange", alpha = 0.7) +
+  geom_vline(xintercept = c(0.001, 0.005, 0.01, 0.02),
+             linetype = "dashed") +
+  coord_cartesian(xlim = c(0, 0.1)) +
+  labs(
+    title = "Distribution de |ΔD|",
+    subtitle = "Chercher le 'coude' pour fixer un threshold",
+    x = "|ΔD|",
+    y = "Nombre d'observations"
+  ) +
+  theme_minimal()
+
+ggsave("abs_deltaD_hist.png", plot = p_abs, width = 9, height = 5, dpi = 200)
+
+thresholds <- c(0.001, 0.005, 0.01, 0.02)
+
+n_switchers <- sapply(thresholds, function(th) {
+  sum(abs(df$delta_D) > th)
+})
+
+share_switchers <- n_switchers / nrow(df)
+
+data.frame(
+  threshold = thresholds,
+  n_switchers = n_switchers,
+  share_switchers = round(share_switchers, 3)
+)
+
+share_variation <- sapply(thresholds, function(th) {
+  sum(abs(df$delta_D[abs(df$delta_D) > th])) / sum(abs(df$delta_D))
+})
+
+data.frame(
+  threshold = thresholds,
+  share_total_variation = round(share_variation, 3)
+)

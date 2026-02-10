@@ -1,3 +1,9 @@
+library(dplyr)
+library(tidyr)
+library(fixest)
+library(arrow)
+
+
 twfe_foret = clc1990 %>%
   mutate(time = 1) %>%
   bind_rows( clc2000 %>% mutate(time = 2)) %>%
