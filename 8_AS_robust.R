@@ -273,3 +273,29 @@ data.frame(
   threshold = thresholds,
   share_total_variation = round(share_variation, 3)
 )
+
+################################################################################
+# 7. Graphique valeur de l'estimateur selon la valeur du seuil
+################################################################################
+
+
+library(purrr)
+library(zoo)
+
+plot_seuil_ASS <- res %>%
+  arrange(seuil) %>%
+  mutate(delta_ma = zoo::rollmean(delta_1, k = 50, fill = NA, align = "center"))
+# k = taille de la fenetre (a ajuster)
+
+ggplot(plot_seuil_ASS, aes(x = seuil, y = delta_1)) +
+  geom_point(alpha = 0.4) +
+  #geom_line(aes(y = delta_ma), color = "red", linewidth = 1) +
+  labs(
+    x = "Seuil",
+    y = "Effet estimé",
+    title = "Estimation de l'effet avec une méthode d'ASS en fonction du seuil"
+  ) +
+  xlim(0,0.05) +
+  ylim(-15,25) +
+  theme_minimal()
+
