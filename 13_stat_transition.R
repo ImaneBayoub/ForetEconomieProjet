@@ -16,7 +16,7 @@ dir.create(img_dir, recursive = TRUE, showWarnings = FALSE)
 
 # --- Lire communes + filtre IDF ---
 communes_sf <- st_read(gpkg_path, layer = "COMMUNE", quiet = TRUE)
-idf_sf <- communes_sf[communes_sf$code_insee_de_la_region %in% c("11", 11), ]
+idf_sf <- communes_sf
 stopifnot(nrow(idf_sf) > 0)
 
 # --- Charger rasters une fois ---
@@ -87,7 +87,7 @@ for (i in seq_len(nrow(idf_sf))) {
   }
   if (length(com_name) == 0 || is.na(com_name) || trimws(com_name) == "") {
     com_name <- com_code
-  }
+  } 
 
   # 3) garantir scalaire
   com_code <- as.character(com_code[1])
@@ -109,19 +109,24 @@ for (i in seq_len(nrow(idf_sf))) {
   nvalid12 <- global(!is.na(r2012), "sum", na.rm = TRUE)[1, 1]
   nvalid90 <- global(!is.na(r1990), "sum", na.rm = TRUE)[1, 1]
   if (is.na(nvalid12) || nvalid12 == 0 || is.na(nvalid90) || nvalid90 == 0) {
-    res_list[[i]] <- data.frame(
-      insee = com_code,
-      nom   = com_name,
-      agri_1990 = 0, agri_2012 = 0,
-      foret_1990 = 0, foret_2012 = 0,
-      agri_adj_foret_1990 = 0, agri_adj_foret_2012 = 0,
-      diff_agri_12_90 = 0,
-      diff_foret_12_90 = 0,
-      agri_to_foret = 0,
-      foret_to_agri = 0
-    )
+  res_list[[i]] <- data.frame(
+    insee = com_code,
+    nom   = com_name,
+    pixels_total_1990 = 0,
+    pixels_total_2012 = 0,
+    agri_1990 = 0, agri_2012 = 0,
+    foret_1990 = 0, foret_2012 = 0,
+    agri_adj_foret_1990 = 0, agri_adj_foret_2012 = 0,
+    diff_agri_12_90 = 0,
+    diff_foret_12_90 = 0,
+    agri_to_foret = 0,
+    foret_to_agri = 0
+  )
     next
   }
+
+  pixels_total_2012 <- as.numeric(nvalid12)
+  pixels_total_1990 <- as.numeric(nvalid90)
 
   # Comptages agricoles / forêt
   agri_1990  <- count_true(r1990 == 2)
@@ -167,6 +172,8 @@ for (i in seq_len(nrow(idf_sf))) {
   res_list[[i]] <- data.frame(
     insee = com_code,
     nom   = com_name,
+    pixels_total_1990 = pixels_total_1990,
+    pixels_total_2012 = pixels_total_2012,
     agri_1990 = agri_1990,
     agri_2012 = agri_2012,
     foret_1990 = foret_1990,
@@ -185,7 +192,7 @@ for (i in seq_len(nrow(idf_sf))) {
 res <- do.call(rbind, res_list)
 
 # Sauvegarde CSV
-csv_path <- file.path(out_dir, "indicateurs_communes_idf_clc_1990_2012.csv")
+csv_path <- file.path(out_dir, "indicateurs_communes_clc_1990_2012.csv")
 write.csv(res, csv_path, row.names = FALSE)
 
 cat("\nOK -> images:", img_dir, "\n")
