@@ -278,7 +278,7 @@ write.csv(resume_final, out_path, row.names = FALSE)
 cat(" Export final OK :", out_path, "\n")
 
 # ============================================================
-# 12) Plot trajectoires moyennes + productivité (labels lisibles)
+# 12) Plot trajectoires moyennes + productivité
 # ============================================================
 
 centroids_prod <- df_cluster_prod %>%
