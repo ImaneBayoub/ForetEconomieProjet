@@ -14,7 +14,7 @@ suppressPackageStartupMessages({
 })
 
 # ---- 0) Chemins ----
-csv_path  <- "/home/imane/Documents/ensae/ForetEconomieProjet/ForetEconomieProjet-1/out_communes/indicateurs_communes_clc_1990_2012.csv"
+csv_path  <- "/home/imane/Documents/ensae/ForetEconomieProjet/out_communes/indicateurs_communes_clc_1990_2012.csv"
 
 gpkg_path <- "data/admin_express/ADMIN-EXPRESS_4-0__GPKG_LAMB93_FXX_2025-11-20/ADMIN-EXPRESS/1_DONNEES_LIVRAISON_2025-11-00136/ADE_4-0_GPKG_LAMB93_FXX-ED2025-11-20/ADE_4-0_GPKG_LAMB93_FXX-ED2025-11-20.gpkg"
 gpkg_layer <- "COMMUNE"
@@ -224,7 +224,7 @@ resume_clusters <- df_cluster %>%
 #     depuis twfe_data.csv (id, time, ratio_prod_surface)
 # ============================================================
 
-prod_path <- "/home/imane/Documents/ensae/ForetEconomieProjet/ForetEconomieProjet-1/data/twfe_data.csv"
+prod_path <- "/home/imane/Documents/ensae/ForetEconomieProjet/data/twfe_data.csv"
 
 df_prod <- read.csv(prod_path, stringsAsFactors = FALSE) %>%
   mutate(
@@ -273,7 +273,7 @@ resume_final <- resume_clusters %>%
   left_join(resume_prod_clusters, by = "cluster")
 
 # Export final (UN SEUL FICHIER)
-out_path <- "/home/imane/Documents/ensae/ForetEconomieProjet/ForetEconomieProjet-1/resume_clusters_agri_foret.csv"
+out_path <- "/home/imane/Documents/ensae/ForetEconomieProjet/resume_clusters_agri_foret.csv"
 write.csv(resume_final, out_path, row.names = FALSE)
 
 cat(" Export final OK :", out_path, "\n")
@@ -362,3 +362,16 @@ ggsave(
 )
 
 cat("Plot sauvegardé : plots/traj_moyennes_clusters_agri_foret_productivite.png\n")
+
+# ============================================================
+# 13) Export correspondance commune -> cluster
+# ============================================================
+
+out_clusters_path <- "/home/imane/Documents/ensae/ForetEconomieProjet/data/commune_cluster.csv"
+
+df_cluster_export <- df_cluster %>%
+  select(insee, cluster)
+
+write.csv(df_cluster_export, out_clusters_path, row.names = FALSE)
+
+cat("Correspondance commune-cluster exportée :", out_clusters_path, "\n")
