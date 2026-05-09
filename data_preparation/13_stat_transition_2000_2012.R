@@ -215,6 +215,43 @@ if(length(problemes) > 0) {
 
 res <- do.call(rbind, res_list)
 
+# Ajout de la productivité agricole
+agri1988 =  read_parquet("agri1988.parquet") %>% rename(id = com) %>% mutate(time = 1) %>% select("id","time","ratio_prod_surface","production","superficie")
+agri2000 = read_parquet("agri2000.parquet") %>% rename(id = com) %>% mutate(time = 2) %>% select("id","time","ratio_prod_surface","production","superficie")
+agri2010 = read_parquet("agri2010.parquet") %>% rename(id = com) %>% mutate(time = 3) %>% select("id","time","ratio_prod_surface","production","superficie")
+
+
+df_prod = agri1988 %>%
+  bind_rows(agri2000) %>%
+  bind_rows(agri2010)
+
+# Wide: prod_1990 (time=1), prod_2000 (time=2), prod_2012 (time=3) + delta
+df_prod_wide <- df_prod %>%
+  filter(time %in% c(1, 2, 3)) %>%
+  select(id, time, ratio_prod_surface) %>%
+  distinct() %>%
+  pivot_wider(
+    names_from = time,
+    values_from = ratio_prod_surface,
+    names_prefix = "t"
+  ) %>%
+  rename(
+    prod_1990 = t1,
+    prod_2000 = t2,
+    prod_2012 = t3
+  ) %>%
+  mutate(
+    d_prod_12_90 = prod_2012 - prod_1990,
+    d_prod_12_00 = prod_2012 - prod_2000,
+    d_prod_00_90 = prod_2000 - prod_1990
+  )
+
+df_cluster <- res
+
+# Joindre au niveau commune (utile si tu veux aussi faire des boxplots etc.)
+df_cluster_prod <- df_cluster %>%
+  left_join(df_prod_wide, by = c("insee" = "id"))
+
 # Sauvegarde CSV
 csv_path <- file.path(out_dir, "indicateurs_communes_clc_1990_2000_2012.csv")
 write.csv(res, csv_path, row.names = FALSE)

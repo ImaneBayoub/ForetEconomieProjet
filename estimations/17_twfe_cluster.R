@@ -226,12 +226,12 @@ summary(m_bins) # Le premier bin sert de référence
 
 # Plus simple : division en 5 bins égaux
 df_long <- df_long %>%
-  mutate(D_bin2 = ntile(D, 5)) # Crée des groupes de 1 à 5
+  mutate(D_bin2 = ntile(D, 10)) # Crée des groupes de 1 à 10
 
 m2_bins <- feols(Y ~ i(D_bin2, ref = 1) | insee + time, data = df_long, cluster = ~insee)
 summary(m2_bins)
 
-# Effets non linéaires avec interactions
+# Effets non linéaires avec interactions : librairie ne fonctionne pas
 library(marginaleffects)
 m_hetero <- feols(
   Y ~ D * Z | insee + time + cluster[time],
@@ -245,7 +245,7 @@ slopes(
   condition = "Z"
 )
 
-# Synthetic control
+# Synthetic control : problème avec les versions des packages
 library(gsynth)
 gs <- gsynth(
   Y ~ D + Z,
@@ -254,6 +254,45 @@ gs <- gsynth(
   force = "two-way",
   CV = TRUE
 )
+
+################################################################################
+# Approche IV avec la part de pixels agricoles adjacents à de la forêt (Z) comme instrument pour D
+################################################################################
+
+# Modèle avec effets fixes (Commune + Temps)
+# Structure : Résultat ~ Covariables | Effets Fixes | Traitement ~ Instrument
+m_iv <- feols(
+  Y ~ 1 | insee + time | D ~ Z, 
+  data = df_long,
+  cluster = ~insee
+)
+
+# Affichage des résultats de la deuxième étape (L'effet causal de D sur Y)
+summary(m_iv)
+#       Estimate Std. Error t value Pr(>|t|) 
+# fit_D 0.018413   0.014966 1.23033  0.21858
+# ---
+# Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+# RMSE: 1.5662     Adj. R2: 0.824916
+#                Within R2: 3.694e-5
+# F-test (1st stage), D: stat = 2,216.8975, p < 2.2e-16 , on 1 and 81,030 DoF.
+#            Wu-Hausman: stat =     1.1244, p = 0.288977, on 1 and 53,131 DoF.
+
+# Calcul des statistiques de diagnostic
+fitstat(m_iv, type = c("ivf", "wu", "isw"))
+
+summary(m_iv, stage = 1)
+
+# Relation directe entre l'instrument (Z) et le résultat (Y)
+m_reduced <- feols(Y ~ Z | insee + time, data = df_long, cluster = ~insee)
+
+summary(m_reduced)
+
+library(binsreg)
+
+# Visualise la relation entre Z (agri adj forêt) et D (forêt) après avoir nettoyé les effets fixes
+binsreg(df_long$D, df_long$Z, w = cbind(as.factor(df_long$insee), as.factor(df_long$time)))
+
 
 ################################################################################
 # 4. Calcul de l'estimateur AS sur l'échantillon trimmed (période 2000 -> 2012)

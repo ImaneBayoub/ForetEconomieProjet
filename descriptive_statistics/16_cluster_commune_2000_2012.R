@@ -252,7 +252,7 @@ df_cluster_prod <- df_cluster %>%
   left_join(df_prod_wide, by = c("insee" = "id"))
 
 # Enregistrer le df complet
-write.csv(df_cluster_prod, "data/df_cluster_prod_2000_2012.csv", row.names = FALSE)
+write.csv(df_cluster_prod, "data/df_cluster_prod_1990_2000_2012.csv", row.names = FALSE)
 
 # Résumer par cluster
 resume_prod_clusters <- df_cluster_prod %>%
