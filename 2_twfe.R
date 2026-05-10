@@ -1,43 +1,55 @@
+# ============================================================
+# 2_twfe.R
+# TWFE : effet de la forêt et de la lisière
+# sur la productivité agricole
+# ============================================================
+
 library(dplyr)
-library(tidyr)
 library(fixest)
-library(arrow)
 
+# ── Charger les deux jeux de données ─────────────────────────
 
-twfe_foret = clc1990 %>%
-  mutate(time = 1) %>%
-  bind_rows( clc2000 %>% mutate(time = 2)) %>%
-  bind_rows( clc2012 %>% mutate(time = 3)) %>%
-  select("id","time","prop_foret","prop_foret_alt") 
+df_foret   <- read.csv("data/twfe_data.csv")
+df_lisiere <- read.csv("data/twfe_data_lisiere.csv")
 
-agri1988 =  read_parquet("agri1988.parquet") %>% rename(id = com) %>% mutate(time = 1) %>% select("id","time","ratio_prod_surface","production","superficie")
-agri2000 = read_parquet("agri2000.parquet") %>% rename(id = com) %>% mutate(time = 2) %>% select("id","time","ratio_prod_surface","production","superficie")
-agri2010 = read_parquet("agri2010.parquet") %>% rename(id = com) %>% mutate(time = 3) %>% select("id","time","ratio_prod_surface","production","superficie")
+# Garder communes présentes aux 3 périodes
+df_foret <- df_foret %>%
+  group_by(id) %>% filter(n() == 3) %>% ungroup()
 
+df_lisiere <- df_lisiere %>%
+  filter(!is.na(lisiere_pct.x)) %>%
+  group_by(id) %>% filter(n() == 3) %>% ungroup()
 
-twfe_agri = agri1988 %>%
-  bind_rows(agri2000) %>%
-  bind_rows(agri2010)
+cat("========================================\n")
+cat("TWFE — PROP. FORÊT (prop_foret_alt)\n")
+cat("========================================\n")
+cat("Obs :", nrow(df_foret), "| Communes :", n_distinct(df_foret$id), "\n\n")
 
+fit <- feols(ratio_prod_surface ~ prop_foret_alt | id + time, data = df_foret)
+cat("--- ratio_prod_surface ~ prop_foret_alt ---\n"); print(summary(fit))
 
-twfe_data = twfe_foret %>% inner_join(twfe_agri, by = join_by(id == id,time== time) ) %>%
-  filter(!(is.na(ratio_prod_surface)|is.na(prop_foret)))
+fit <- feols(log(ratio_prod_surface) ~ prop_foret_alt | id + time, data = df_foret)
+cat("--- log(ratio_prod_surface) ~ prop_foret_alt ---\n"); print(summary(fit))
 
-table(is.na(twfe_data$ratio_prod_surface))
-table(twfe_data %>% select(id) %>% group_by(id) %>% mutate(n_count = n()) %>% ungroup() %>% filter(n_count != 3) %>%  select(n_count))
+fit <- feols(production ~ prop_foret_alt | id + time, data = df_foret)
+cat("--- production ~ prop_foret_alt ---\n"); print(summary(fit))
 
-fit_tw <- feols(ratio_prod_surface ~ prop_foret | id + time, data = twfe_data)
-summary(fit_tw)
-#
-fit_tw <- feols(log(ratio_prod_surface) ~ (prop_foret_alt) | id + time, data = twfe_data)
-summary(fit_tw)
-fit_tw <- feols(ratio_prod_surface ~ (prop_foret_alt) | id + time, data = twfe_data)
-summary(fit_tw)
-# Lorsque la couverture forestière augmente d'un %, la production décroit de 322 euros
+fit <- feols(log(superficie) ~ prop_foret_alt | id + time, data = df_foret)
+cat("--- log(superficie) ~ prop_foret_alt ---\n"); print(summary(fit))
 
-fit_tw <- feols(production ~ prop_foret_alt | id + time, data = twfe_data)
-summary(fit_tw)
+cat("\n\n========================================\n")
+cat("TWFE — LISIÈRE (lisiere_pct)\n")
+cat("========================================\n")
+cat("Obs :", nrow(df_lisiere), "| Communes :", n_distinct(df_lisiere$id), "\n\n")
 
-fit_tw <- feols(log(superficie) ~ prop_foret_alt | id + time, data = twfe_data)
-summary(fit_tw)
+fit <- feols(ratio_prod_surface ~ lisiere_pct.x | id + time, data = df_lisiere)
+cat("--- ratio_prod_surface ~ lisiere_pct.x ---\n"); print(summary(fit))
 
+fit <- feols(log(ratio_prod_surface) ~ lisiere_pct.x | id + time, data = df_lisiere)
+cat("--- log(ratio_prod_surface) ~ lisiere_pct.x ---\n"); print(summary(fit))
+
+fit <- feols(production ~ lisiere_pct.x | id + time, data = df_lisiere)
+cat("--- production ~ lisiere_pct.x ---\n"); print(summary(fit))
+
+fit <- feols(log(superficie) ~ lisiere_pct.x | id + time, data = df_lisiere)
+cat("--- log(superficie) ~ lisiere_pct.x ---\n"); print(summary(fit))

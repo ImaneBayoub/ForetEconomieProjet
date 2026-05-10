@@ -1,7 +1,6 @@
 # ============================================================
 # 9_AS_lisiere.R
-# Adaptation de l'analyse AS robuste (8_AS_robust.R)
-# avec la lisière comme traitement au lieu de prop_foret_alt
+# Analyse AS robuste avec la lisière comme traitement
 # ============================================================
 
 library(dplyr)
@@ -10,10 +9,11 @@ library(ggplot2)
 library(mgcv)
 library(zoo)
 library(purrr)
+library(tibble)
 
 twfe_data <- read.csv("data/twfe_data_lisiere.csv", stringsAsFactors = FALSE)
 
-# Nettoyer : on vire les lignes sans lisière
+# Garder les lignes avec lisière et les communes aux 3 périodes
 twfe_data <- twfe_data %>% filter(!is.na(lisiere_pct.x))
 cat("Observations avec lisière :", nrow(twfe_data), "\n")
 
@@ -22,18 +22,12 @@ df <- twfe_data %>%
   filter(n() == 3) %>%
   ungroup() %>%
   select(id, time, D = lisiere_pct.x, Y = ratio_prod_surface) %>%
-  pivot_wider(
-    names_from = time,
-    values_from = c(D, Y),
-    names_sep = ""
-  ) %>%
+  pivot_wider(names_from = time, values_from = c(D, Y), names_sep = "") %>%
   mutate(
-    # Analyse principale 2 -> 3
     delta_D    = D3 - D2,
     delta_Y    = Y3 - Y2,
     S          = as.integer(delta_D != 0),
     delta_logY = ifelse(Y2 > 0 & Y3 > 0, log(Y3) - log(Y2), NA_real_),
-    # Placebo 1 -> 2
     delta_Y_12 = Y2 - Y1,
     delta_D_23 = D3 - D2,
     delta_logY_12 = ifelse(Y1 > 0 & Y2 > 0, log(Y2) - log(Y1), NA_real_)
@@ -44,10 +38,10 @@ df <- twfe_data %>%
 ################################################################################
 
 model_placebo <- lm(delta_logY_12 ~ D1 + delta_D_23, data = df, na.action = na.omit)
-cat("=== Test placebo (tendances parallèles) ===\n")
+cat("=== Test placebo ===\n")
 print(summary(model_placebo))
 
-placebo_gam <- gam(delta_logY_12 ~ s(D1) + ti(D1, delta_D_23),
+placebo_gam <- gam(delta_logY_12 ~ s(D1, k = 5) + ti(D1, delta_D_23, k = 5),
   data = df, na.action = na.omit)
 cat("\n=== Test placebo non-paramétrique ===\n")
 print(summary(placebo_gam))
@@ -82,10 +76,11 @@ df_trim <- df %>%
 cat("\nAvant trimming:", nrow(df), "| Après:", nrow(df_trim), "\n")
 
 ################################################################################
-# 4. Estimateur AS
+# 4. Estimateur AS (modèle linéaire pour robustesse)
 ################################################################################
 
-mod_stayers <- gam(delta_logY ~ s(D2), data = df_trim[df_trim$S==0,], na.action = na.omit)
+# Modèle linéaire (la lisière a trop de 0 pour des splines)
+mod_stayers <- lm(delta_logY ~ D2, data = df_trim[df_trim$S==0,], na.action = na.omit)
 switchers <- df_trim[df_trim$S == 1, ]
 switchers$delta_logY_hat <- predict(mod_stayers, newdata = switchers)
 
@@ -97,7 +92,7 @@ cat("\n=== Estimateur AS (lisière) ===\n")
 cat("delta_AS =", round(delta_AS, 6), "\n")
 
 ################################################################################
-# 5. Bootstrap
+# 5. Bootstrap (avec fallback linéaire)
 ################################################################################
 
 set.seed(123)
@@ -107,8 +102,9 @@ boot_results <- numeric(n_bootstrap)
 calc_as <- function(data) {
   stayers_b <- data[data$S == 0, ]
   switchers_b <- data[data$S == 1, ]
-  if (nrow(stayers_b) < 2 | nrow(switchers_b) < 2) return(NA)
-  mod <- gam(delta_logY ~ s(D2), data = stayers_b, na.action = na.omit)
+  if (nrow(stayers_b) < 5 | nrow(switchers_b) < 5) return(NA)
+
+  mod <- lm(delta_logY ~ D2, data = stayers_b, na.action = na.omit)
   yh <- predict(mod, newdata = switchers_b)
   sum(switchers_b$delta_D * (switchers_b$delta_logY - yh), na.rm=TRUE) /
     sum(switchers_b$delta_D^2, na.rm=TRUE)
@@ -119,6 +115,7 @@ for (i in 1:n_bootstrap) {
   boot_ids <- sample(ids, replace = TRUE)
   boot_df <- df_trim[df_trim$id %in% boot_ids, ]
   boot_results[i] <- calc_as(boot_df)
+  if (i %% 100 == 0) cat("  bootstrap", i, "/", n_bootstrap, "\n")
 }
 
 boot_results <- boot_results[!is.na(boot_results)]
@@ -128,9 +125,12 @@ p_val <- 2 * (1 - pnorm(abs(t_stat)))
 ci_low <- quantile(boot_results, 0.025, na.rm=TRUE)
 ci_high <- quantile(boot_results, 0.975, na.rm=TRUE)
 
-cat("Erreur Standard (boot):", round(se, 6), "\n")
-cat("p-value:", round(p_val, 4), "\n")
-cat("IC 95%: [", round(ci_low, 6), ";", round(ci_high, 6), "]\n")
+cat("\n=== Résultats AS ===\n")
+cat(sprintf("  delta     = %.4f\n", delta_AS))
+cat(sprintf("  se (boot) = %.4f\n", se))
+cat(sprintf("  p-value   = %.4f\n", p_val))
+cat(sprintf("  IC 95%%    = [%.4f ; %.4f]\n", ci_low, ci_high))
+cat(sprintf("  bootstrap valides = %d / %d\n", length(boot_results), n_bootstrap))
 
 ################################################################################
 # 6. Sensibilité au seuil
@@ -141,14 +141,14 @@ threshold_grid <- seq(0.0005, 0.05, by = 0.0005)
 estimate_AS <- function(df_base, th) {
   df_th <- df_base %>% mutate(S = as.integer(abs(delta_D) > th)) %>%
     filter(S == 0 | abs(delta_D) > th)
-  lower <- quantile(df_th$D2[df_th$S==0], 0.05, na.rm = TRUE)
-  upper <- quantile(df_th$D2[df_th$S==0], 0.95, na.rm = TRUE)
-  df_th <- df_th %>% filter(!is.na(delta_logY), D2 >= lower, D2 <= upper)
+  l <- quantile(df_th$D2[df_th$S==0], 0.05, na.rm = TRUE)
+  u <- quantile(df_th$D2[df_th$S==0], 0.95, na.rm = TRUE)
+  df_th <- df_th %>% filter(!is.na(delta_logY), D2 >= l, D2 <= u)
   n_switch <- sum(df_th$S == 1, na.rm = TRUE)
   n_stay   <- sum(df_th$S == 0, na.rm = TRUE)
   if (n_switch < 30 || n_stay < 30)
     return(tibble(seuil = th, delta_1 = NA_real_, n_switchers = n_switch, n_stayers = n_stay))
-  mod <- gam(delta_logY ~ s(D2), data = df_th[df_th$S==0,], na.action = na.omit)
+  mod <- lm(delta_logY ~ D2, data = df_th[df_th$S==0,], na.action = na.omit)
   sw <- df_th[df_th$S == 1, ]
   yh <- predict(mod, newdata = sw)
   delta <- sum(sw$delta_D * (sw$delta_logY - yh), na.rm = TRUE) / sum(sw$delta_D^2, na.rm = TRUE)
@@ -165,4 +165,4 @@ p_sens <- ggplot(res %>% arrange(seuil) %>% mutate(delta_ma = rollmean(delta_1, 
   xlim(0, 0.05) + theme_minimal()
 ggsave("plots/ass_effet_selon_seuil_lisiere.png", plot = p_sens, width = 9, height = 5, dpi = 300)
 
-cat("\nFini. Résultats sauvegardés.\n")
+cat("\nFini. Résultats sauvegardés : data/res_finaux_lisiere.csv\n")
