@@ -362,6 +362,57 @@ write_csv2(
   path("output", "tables", "as_par_typologie_agricole.csv")
 )
 
+# -----------------------------------------------------------------------------
+# 6. Graphique des coefficients AS par sous-groupe (lisière)
+# -----------------------------------------------------------------------------
+
+resultats_lisiere <- resultats %>%
+  dplyr::filter(traitement == "lisière") %>%
+  dplyr::mutate(
+    groupe = dplyr::recode(type_lca,
+      annuel = "Annuel",
+      mixte  = "Mixte/Élevage",
+      perenne = "Pérenne"
+    )
+  )
+
+fichier_total <- path("output", "tables", "as_lisiere_resultats.csv")
+if (file.exists(fichier_total)) {
+  total <- readr::read_csv(fichier_total, show_col_types = FALSE)
+  resultats_lisiere <- dplyr::bind_rows(
+    resultats_lisiere,
+    tibble::tibble(
+      groupe = "Total",
+      estimateur_as = total$estimateur_as,
+      ic_95_bas = total$ic_95_bas,
+      ic_95_haut = total$ic_95_haut
+    )
+  )
+}
+
+figure_coef_as <- resultats_lisiere %>%
+  dplyr::mutate(groupe = forcats::fct_reorder(groupe, estimateur_as)) %>%
+  ggplot2::ggplot(ggplot2::aes(x = estimateur_as, y = groupe)) +
+  ggplot2::geom_vline(xintercept = 0, linetype = "dashed", color = "grey50") +
+  ggplot2::geom_errorbarh(
+    ggplot2::aes(xmin = ic_95_bas, xmax = ic_95_haut),
+    height = 0.2
+  ) +
+  ggplot2::geom_point(size = 3, color = "#2E75B6") +
+  ggplot2::labs(
+    title = "Estimateur AS de lisière par spécialisation agricole",
+    x = "AS (avec IC 95 %)", y = NULL
+  ) +
+  ggplot2::theme_minimal()
+
+ggplot2::ggsave(
+  filename = path("output", "figures", "as_lisiere_par_type_lca.png"),
+  plot = figure_coef_as,
+  width = 7,
+  height = 4
+)
+
 message(
-  "Résultats d'hétérogénéité écrits dans output/tables/as_par_typologie_agricole.csv"
+  "Résultats d'hétérogénéité écrits dans output/tables/as_par_typologie_agricole.csv",
+  "\nFigure sauvegardée dans output/figures/as_lisiere_par_type_lca.png"
 )

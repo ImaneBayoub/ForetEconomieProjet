@@ -39,7 +39,7 @@ if (!file.exists(fichier)) {
   )
 }
 
-base <- arrow::read_parquet(path("data", "processed", "twfe_data.parquet"))
+base <- arrow::read_parquet(fichier)
 
 # -----------------------------------------------------------------------------
 # 2. Statistiques descriptives par période
@@ -220,5 +220,33 @@ ggplot2::ggsave(
   width = 7,
   height = 5
 )
+
+# -----------------------------------------------------------------------------
+# 8. Figure : distribution de la lisière par type LCA
+# -----------------------------------------------------------------------------
+
+if ("type_lca" %in% names(base) && !all(is.na(base$type_lca))) {
+
+  figure_lisiere_type_lca <- base %>%
+    dplyr::filter(!is.na(type_lca), !is.na(pct_lisiere)) %>%
+    ggplot2::ggplot(ggplot2::aes(
+      x = type_lca, y = pct_lisiere, fill = type_lca
+    )) +
+    ggplot2::geom_boxplot(outlier.alpha = 0.1) +
+    ggplot2::facet_wrap(~ libelle_periode) +
+    ggplot2::labs(
+      title = "Distribution de la lisière forêt-agriculture par type agricole",
+      x = "Type LCA", y = "Part de lisière"
+    ) +
+    ggplot2::theme_minimal() +
+    ggplot2::theme(legend.position = "none")
+
+  ggplot2::ggsave(
+    filename = path("output", "figures", "distribution_lisiere_type_lca.png"),
+    plot = figure_lisiere_type_lca,
+    width = 8,
+    height = 5
+  )
+}
 
 message("Sorties descriptives écrites dans output/tables/ et output/figures/.")

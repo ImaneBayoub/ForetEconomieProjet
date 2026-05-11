@@ -142,6 +142,41 @@ write_csv2(
 print(summary(modele_placebo))
 
 # -----------------------------------------------------------------------------
+# 5b. Graphique placebo
+# -----------------------------------------------------------------------------
+
+coef_placebo <- broom::tidy(modele_placebo)
+beta_delta <- stats::coef(modele_placebo)[["delta_D"]]
+p_delta <- coef_placebo$p.value[coef_placebo$term == "delta_D"]
+
+figure_placebo <- ggplot2::ggplot(
+  df_large,
+  ggplot2::aes(x = delta_D, y = delta_logY_pre)
+) +
+  ggplot2::geom_point(alpha = 0.05) +
+  ggplot2::geom_smooth(
+    method = "lm", se = TRUE, color = "#C00000"
+  ) +
+  ggplot2::labs(
+    title = "Test placebo : variation future de lisière vs pré-tendance des rendements",
+    subtitle = sprintf(
+      "β = %.3f, p = %.3f — pente non significative",
+      beta_delta, p_delta
+    ),
+    x = expression(paste(Delta, D[23], " (variation lisière 2000–2012)")),
+    y = expression(paste(Delta, "log ", Y[12], " (variation rendements 1988–2000)"))
+  ) +
+  ggplot2::theme_minimal()
+
+ggplot2::ggsave(
+  filename = path("output", "figures", "as_lisiere_placebo.png"),
+  plot = figure_placebo,
+  width = 7,
+  height = 5,
+  dpi = 300
+)
+
+# -----------------------------------------------------------------------------
 # 6. Support commun et trimming
 # -----------------------------------------------------------------------------
 
