@@ -1,18 +1,30 @@
-                  Forêt Lisière Forêt ..
-Dependent Var.:        Y        Y        Y
-                                          
-pct_foret        0.0003            0.0004 
-                (0.0004)          (0.0005)
-pct_lisiere               0.0008   0.0006 
-                         (0.0017) (0.0017)
-pct_agri                           0.0003 
-                                  (0.0002)
-Fixed-Effects:  -------- -------- --------
-id                   Yes      Yes      Yes
-periode              Yes      Yes      Yes
-_______________ ________ ________ ________
-S.E.: Clustered   by: id   by: id   by: id
-Observations      90,512   90,512   90,512
-R2               0.87244  0.87243  0.87244
+                                Forêt Lisière Forêt .. Lisièr.. Forêt ...1
+Dependent Var.:                      Y        Y        Y        Y          Y
+                                                                            
+pct_foret                      0.0003            0.0004  -6.42e-5           
+                              (0.0004)          (0.0005) (0.0004)           
+pct_lisiere                             0.0008   0.0006              0.0013 
+                                       (0.0017) (0.0017)            (0.0017)
+pct_agri                                         0.0003                     
+                                                (0.0002)                    
+pct_lisiere x type_lcaannuel                              0.0009            
+                                                         (0.0029)           
+pct_lisiere x type_lcamixte                               0.0007            
+                                                         (0.0021)           
+pct_lisiere x type_lcaperenne                             0.0035            
+                                                         (0.0056)           
+pct_foret x type_lcaannuel                                          -0.0003 
+                                                                    (0.0004)
+pct_foret x type_lcamixte                                            0.0012 
+                                                                    (0.0009)
+pct_foret x type_lcaperenne                                         -0.0044*
+                                                                    (0.0021)
+Fixed-Effects:                -------- -------- -------- --------   --------
+id                                 Yes      Yes      Yes      Yes        Yes
+periode                            Yes      Yes      Yes      Yes        Yes
+_____________________________ ________ ________ ________ ________   ________
+S.E.: Clustered                 by: id   by: id   by: id   by: id     by: id
+Observations                    90,512   90,512   90,512   85,113     85,113
+R2                             0.87244  0.87243  0.87244  0.88199    0.88201
 ---
 Signif. codes: 0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
