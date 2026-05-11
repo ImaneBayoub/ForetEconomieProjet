@@ -153,8 +153,6 @@ clean_agreste_year <- function(year) {
 
 years <- c(1988, 2000, 2010)
 agri_list <- purrr::set_names(years) %>% purrr::map(clean_agreste_year)
-purrr::iwalk(agri_list, ~ write_parquet2(.x, path("data", "processed", paste0("agri", .y, ".parquet"))))
-
 agri_panel <- dplyr::bind_rows(agri_list)
 write_parquet2(agri_panel, path("data", "interim", "agri_panel.parquet"))
 write_csv2(agri_panel, path("data", "interim", "agri_panel.csv"))

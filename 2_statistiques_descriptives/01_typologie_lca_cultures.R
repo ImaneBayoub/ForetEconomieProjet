@@ -49,6 +49,9 @@
 # -----------------------------------------------------------------------------
 
 source("R/packages.R")
+source("R/paths.R")
+source("R/utils.R")
+
 select <- dplyr::select
 filter <- dplyr::filter
 mutate <- dplyr::mutate
@@ -58,12 +61,12 @@ summarise <- dplyr::summarise
 # 1) Chemins
 # ============================================================
 
-cultures_path <- "data/interim/superficies_communes_2010.parquet"
+cultures_path <- path("data", "interim", "superficies_communes_2010.parquet")
 
-out_classes <- "output/tables/lca_communes_classes.csv"
-out_summary <- "output/tables/lca_communes_summary.csv"
-out_plot    <- "output/figures/lca_communes_heatmap.png"
-out_fit     <- "output/tables/lca_communes_fit.csv"
+out_classes <- path("output", "tables", "lca_communes_classes.csv")
+out_summary <- path("output", "tables", "lca_communes_summary.csv")
+out_plot    <- path("output", "figures", "lca_communes_heatmap.png")
+out_fit     <- path("output", "tables", "lca_communes_fit.csv")
 
 # ============================================================
 # 2) Paramètres

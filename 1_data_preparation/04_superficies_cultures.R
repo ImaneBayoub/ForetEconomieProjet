@@ -11,18 +11,9 @@ source("R/utils.R")
 message_step("Construction des superficies communales par culture en 2010")
 
 # -----------------------------------------------------------------------------
-# 0. Chemins
-# -----------------------------------------------------------------------------
-
-fichier_entree <- path("data", "raw", "agreste", "FDS_G_1013_2010.txt")
-
-fichier_sortie <- path(
-  "data", "interim", "superficies_communes_2010.parquet"
-)
-
-# -----------------------------------------------------------------------------
 # 1. Charger le fichier
 # -----------------------------------------------------------------------------
+fichier_entree <- path("data", "raw", "agreste", "FDS_G_1013_2010.txt")
 
 df <- readr::read_delim(
   file = fichier_entree,
@@ -164,14 +155,12 @@ df_large <- df %>%
 # 10. Sauvegarder le résultat
 # -----------------------------------------------------------------------------
 
-dir.create(dirname(fichier_sortie), recursive = TRUE, showWarnings = FALSE)
-
-write_parquet2(df_large, fichier_sortie)
+write_csv2(df_large, path("data", "interim", "superficies_communes_2010.csv"))
+write_parquet2(df_large, path("data", "interim", "superficies_communes_2010.parquet"))
 
 # -----------------------------------------------------------------------------
 # 11. Aperçu
 # -----------------------------------------------------------------------------
 
-message("Table créée avec succès : ", fichier_sortie)
+message("Table créée avec succès : ", path("data", "interim", "superficies_communes_2010.parquet"))
 message("Dimensions : ", paste(dim(df_large), collapse = " x "))
-print(utils::head(df_large))

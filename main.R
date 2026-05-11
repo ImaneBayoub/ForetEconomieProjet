@@ -18,7 +18,15 @@ source("R/packages.R")
 source("R/paths.R")
 source("R/utils.R")
 
+# Préparer les données pour les estimations
+# source("1_data_preparation/01_agri_productivite.R")
+# source("1_data_preparation/02_indicateurs_foret.R")
+# source("1_data_preparation/03_base_twfe.R")
+# source("1_data_preparation/04_superficies_cultures.R")
+
 # Statistiques descriptives
+source("2_statistiques_descriptives/01_typologie_lca_cultures.R")
+source("2_statistiques_descriptives/02_ajouter_typologie_agricole.R")
 source("2_statistiques_descriptives/03_figures_descriptives.R")
 source("2_statistiques_descriptives/04_table_descriptive_rapport.R")
 

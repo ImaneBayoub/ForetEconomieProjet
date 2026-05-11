@@ -1,13 +1,14 @@
 # -----------------------------------------------------------------------------
 # 02_ajouter_typologie_agricole.R
-# Ajouter la typologie agricole issue de la LCA à la base twfe_data_enriched
+# Ajouter la typologie agricole issue de la LCA à la base twfe_data
 #
 # Sortie :
-#   data/processed/twfe_data_enriched.csv/parquet
-#   mis à jour avec les variables classe_lca et type_lca
+#   data/processed/twfe_data_enrichie.csv/parquet
+#   output/tables/lca_typologie.csv
 #
 # Entrée :
-#   data/processed/lca_communes_classes.csv
+#   data/processed/twfe_data.parquet
+#   output/tables/lca_communes_classes.csv
 # -----------------------------------------------------------------------------
 
 source("R/packages.R")
@@ -16,13 +17,12 @@ source("R/utils.R")
 
 message_step("Ajouter la typologie agricole issue de la LCA à la base twfe_data")
 
-enriched_file <- path("data", "processed", "twfe_data_enriched.parquet")
-if (!file.exists(enriched_file)) {
-  enriched_file <- path("data", "processed", "twfe_data.parquet")
-  if (!file.exists(enriched_file)) stop("Missing twfe_data. Run preparation scripts first.", call. = FALSE)
+input_file <- path("data", "processed", "twfe_data.parquet")
+if (!file.exists(input_file)) {
+  stop("Missing twfe_data. Run preparation scripts first.", call. = FALSE)
 }
 
-twfe <- arrow::read_parquet(enriched_file)
+twfe <- arrow::read_parquet(input_file)
 
 
 lca_file <- path("output", "tables", "lca_communes_classes.csv")
@@ -68,5 +68,4 @@ summary <- twfe %>%
   dplyr::count(type_lca, name = "n_communes")
 write_csv2(summary, path("output", "tables", "lca_typologie.csv"))
 
-message("Typologie agricole ajoutée. Résumé des classes LCA :")
-print(summary)
+message("Typologie agricole ajoutée dans : output/tables/lca_typologie.csv")

@@ -15,14 +15,10 @@ source("R/utils.R")
 message_step("Construction de la base d'analyse unique pour les TWFE")
 
 agri_panel <- arrow::read_parquet(path("data", "interim", "agri_panel.parquet"))
-
-clc_indicateurs <- readr::read_csv(
-  path("data", "interim", "clc_commune_indicateurs.csv"),
-  show_col_types = FALSE
-)
+clc_indicateurs <- arrow::read_parquet(path("data", "interim", "clc_commune_indicateurs.parquet"))
 
 clc_long <- clc_indicateurs %>%
-  select(
+  dplyr::select(
     id = insee,
     nom = nom,
     pixels_total_1990, pixels_total_2000, pixels_total_2012,
@@ -35,9 +31,9 @@ clc_long <- clc_indicateurs %>%
     names_to = c(".value", "clc_annee"),
     names_pattern = "(.*)_(1990|2000|2012)"
   ) %>%
-  mutate(
+  dplyr::mutate(
     clc_annee = as.integer(clc_annee),
-    periode = case_when(
+    periode = dplyr::case_when(
       clc_annee == 1990 ~ 1L,
       clc_annee == 2000 ~ 2L,
       clc_annee == 2012 ~ 3L
@@ -45,8 +41,8 @@ clc_long <- clc_indicateurs %>%
   )
 
 agri_panel <- agri_panel %>%
-  mutate(
-    periode = case_when(
+  dplyr::mutate(
+    periode = dplyr::case_when(
       agri_annee == 1988 ~ 1L,
       agri_annee == 2000 ~ 2L,
       agri_annee == 2010 ~ 3L
@@ -54,21 +50,21 @@ agri_panel <- agri_panel %>%
   )
 
 twfe_data <- agri_panel %>%
-  inner_join(clc_long, by = c("id", "periode")) %>%
-  filter(
+  dplyr::inner_join(clc_long, by = c("id", "periode")) %>%
+  dplyr::filter(
     !is.na(productivite),
     !is.na(pct_foret),
     !is.na(pct_lisiere)
   )
-
 
 periode_labels <- c(
   "1" = "1988/1990",
   "2" = "2000",
   "3" = "2010/2012"
 )
+
 twfe_data <- twfe_data %>%
-  mutate(libelle_periode = periode_labels[as.character(periode)])
+  dplyr::mutate(libelle_periode = periode_labels[as.character(periode)])
 
 
 write_csv2(twfe_data, path("data", "processed", "twfe_data.csv"))

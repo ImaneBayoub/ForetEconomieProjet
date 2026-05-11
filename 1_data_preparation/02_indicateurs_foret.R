@@ -85,12 +85,12 @@ if (!terra::compareGeom(clc2012, clc2000, stopOnError = FALSE)) {
 # Recodage CLC agrégé :
 # 1-11  : artificiel
 # 12-22 : agricole
-# 23-33 : forêt / milieux semi-naturels
+# 23-25 : forêt
 rcl <- matrix(
   c(
     1,  11, 1,
     12, 22, 2,
-    23, 33, 3
+    23, 25, 3
   ),
   ncol = 3,
   byrow = TRUE
