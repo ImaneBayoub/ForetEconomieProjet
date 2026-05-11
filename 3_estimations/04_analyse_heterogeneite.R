@@ -61,6 +61,7 @@ check_required_cols(
   "twfe_data_enrichie"
 )
 
+
 # -----------------------------------------------------------------------------
 # 3. Fonction locale d'estimation AS
 # -----------------------------------------------------------------------------
@@ -86,6 +87,7 @@ estimer_as <- function(data, traitement, nom_traitement, groupe_lca) {
       !is.na(D)
     ) %>%
     tidyr::pivot_wider(
+      id_cols = id,
       names_from = periode,
       values_from = c(Y, D),
       names_sep = ""
@@ -363,5 +365,3 @@ write_csv2(
 message(
   "Résultats d'hétérogénéité écrits dans output/tables/as_par_typologie_agricole.csv"
 )
-
-print(resultats)
