@@ -58,3 +58,11 @@ unzip_if_missing(
   exdir = path("data", "raw"),
   marker_file = path("data", "raw", "clc", "U2018_CLC2012_V2020_20u1.tif")
 )
+
+if (!file.exists(marker_file)) {
+  stop(
+    "Décompression terminée, mais fichier attendu introuvable : ",
+    marker_file,
+    "\nVérifie la structure interne du zip."
+  )
+}

@@ -1,5 +1,5 @@
 # -----------------------------------------------------------------------------
-# 01_twfe_foret_lisiere.R
+# 01_twfe.R
 # Estimations TWFE à partir de la base d'analyse unique
 # -----------------------------------------------------------------------------
 # Estimations principales :
@@ -36,7 +36,7 @@ if (!file.exists(fichier)) {
 
 if (!file.exists(fichier)) {
   stop(
-    "Base TWFE introuvable. Lance d'abord les scripts de préparation des données.",
+    "Base TWFE introuvable. Lancez d'abord les scripts de préparation des données.",
     call. = FALSE
   )
 }
@@ -52,12 +52,12 @@ check_required_cols(
   c(
     "id",
     "periode",
-    "log_productivite",
+    "productivite",
     "pct_foret",
     "pct_lisiere",
     "pct_agri"
   ),
-  "base_twfe"
+  "twfe_data"
 )
 
 base <- base %>%
@@ -68,10 +68,11 @@ base <- base %>%
       as.factor(type_lca)
     } else {
       factor(NA_character_)
-    }
+    },
+    Y = safe_log(productivite)
   ) %>%
   dplyr::filter(
-    !is.na(log_productivite),
+    !is.na(Y),
     !is.na(pct_foret),
     !is.na(pct_lisiere),
     !is.na(pct_agri)
@@ -82,19 +83,19 @@ base <- base %>%
 # -----------------------------------------------------------------------------
 
 modele_foret <- fixest::feols(
-  log_productivite ~ pct_foret | id + periode,
+  Y ~ pct_foret | id + periode,
   data = base,
   cluster = ~ id
 )
 
 modele_lisiere <- fixest::feols(
-  log_productivite ~ pct_lisiere | id + periode,
+  Y ~ pct_lisiere | id + periode,
   data = base,
   cluster = ~ id
 )
 
 modele_foret_lisiere <- fixest::feols(
-  log_productivite ~ pct_foret + pct_lisiere + pct_agri | id + periode,
+  Y ~ pct_foret + pct_lisiere + pct_agri | id + periode,
   data = base,
   cluster = ~ id
 )
@@ -108,10 +109,6 @@ modeles <- list(
 # -----------------------------------------------------------------------------
 # 4. Hétérogénéité selon la typologie agricole LCA
 # -----------------------------------------------------------------------------
-# Ces modèles ne constituent pas l'estimation principale. Ils permettent de
-# regarder si l'association entre forêt/lisière et productivité varie selon le
-# type agricole des communes.
-# -----------------------------------------------------------------------------
 
 if ("type_lca" %in% names(base) &&
     dplyr::n_distinct(stats::na.omit(base$type_lca)) >= 2) {
@@ -120,13 +117,13 @@ if ("type_lca" %in% names(base) &&
     dplyr::filter(!is.na(type_lca))
   
   modele_lisiere_lca <- fixest::feols(
-    log_productivite ~ pct_lisiere:type_lca + pct_foret | id + periode,
+    Y ~ pct_lisiere:type_lca + pct_foret | id + periode,
     data = base_lca,
     cluster = ~ id
   )
   
   modele_foret_lca <- fixest::feols(
-    log_productivite ~ pct_foret:type_lca + pct_lisiere | id + periode,
+    Y ~ pct_foret:type_lca + pct_lisiere | id + periode,
     data = base_lca,
     cluster = ~ id
   )

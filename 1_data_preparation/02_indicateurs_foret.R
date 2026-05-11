@@ -284,6 +284,5 @@ clc_indicateurs <- clc_indicateurs %>%
 
 write_csv2(clc_indicateurs, path("data", "interim", "clc_commune_indicateurs.csv"))
 write_parquet2(clc_indicateurs, path("data", "interim", "clc_commune_indicateurs.parquet"))
-write_csv2(clc_summary, path("output", "tables", "clc_indicateurs_summary.csv"))
 
 message("CLC indicateurs écrits dans data/interim/clc_commune_indicateurs.parquet")

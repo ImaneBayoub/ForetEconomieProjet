@@ -6,13 +6,8 @@
 #   Estimer séparément l'effet de la forêt et de la lisière selon le type agricole
 #   des communes, défini à partir de la typologie LCA.
 #
-# Principe :
-#   La typologie agricole n'est pas utilisée pour reconstruire les données.
-#   Elle est simplement ajoutée à la base d'analyse enrichie et utilisée comme
-#   facteur d'hétérogénéité.
-#
 # Entrée :
-#   data/processed/base_twfe_enrichie.parquet
+#   data/processed/twfe_data_enrichie.parquet
 #
 # Sortie :
 #   output/tables/as_par_typologie_agricole.csv
@@ -21,12 +16,6 @@
 source("R/packages.R")
 source("R/paths.R")
 source("R/utils.R")
-
-library(dplyr)
-library(tidyr)
-library(purrr)
-library(mgcv)
-library(readr)
 
 message_step("Estimations AS par typologie agricole LCA")
 
@@ -52,7 +41,7 @@ if (!file.exists(fichier)) {
   stop(
     "Base enrichie introuvable : ",
     fichier,
-    "\nLance d'abord le script qui ajoute la typologie agricole LCA.",
+    "\nLancez d'abord le script qui ajoute la typologie agricole LCA.",
     call. = FALSE
   )
 }
@@ -69,7 +58,7 @@ check_required_cols(
     "pct_lisiere",
     "type_lca"
   ),
-  "base_twfe_enrichie"
+  "twfe_data_enrichie"
 )
 
 # -----------------------------------------------------------------------------
@@ -85,21 +74,26 @@ estimer_as <- function(data, traitement, nom_traitement, groupe_lca) {
       productivite,
       D = dplyr::all_of(traitement)
     ) %>%
+    dplyr::mutate(
+      productivite = as.numeric(productivite),
+      Y = safe_log(productivite),
+      D = as.numeric(D)
+    ) %>%
     dplyr::filter(
       !is.na(id),
       !is.na(periode),
-      !is.na(productivite),
+      !is.na(Y),
       !is.na(D)
     ) %>%
     tidyr::pivot_wider(
       names_from = periode,
-      values_from = c(productivite, D),
+      values_from = c(Y, D),
       names_sep = ""
     ) %>%
     dplyr::filter(
-      !is.na(productivite1),
-      !is.na(productivite2),
-      !is.na(productivite3),
+      !is.na(Y1),
+      !is.na(Y2),
+      !is.na(Y3),
       !is.na(D1),
       !is.na(D2),
       !is.na(D3)
@@ -107,17 +101,15 @@ estimer_as <- function(data, traitement, nom_traitement, groupe_lca) {
     dplyr::mutate(
       delta_D = D3 - D2,
       S = as.integer(abs(delta_D) > seuil_switcher),
-      delta_logY = dplyr::if_else(
-        productivite2 > 0 & productivite3 > 0,
-        log(productivite3) - log(productivite2),
-        NA_real_
-      )
+      delta_logY = Y3 - Y2,
+      delta_logY_pre = Y2 - Y1
     )
   
   if (nrow(df_large) == 0) {
     return(tibble::tibble(
       type_lca = groupe_lca,
       traitement = nom_traitement,
+      variable_dependante = "log(productivite)",
       estimateur_as = NA_real_,
       erreur_standard = NA_real_,
       p_value = NA_real_,
@@ -156,6 +148,7 @@ estimer_as <- function(data, traitement, nom_traitement, groupe_lca) {
     return(tibble::tibble(
       type_lca = groupe_lca,
       traitement = nom_traitement,
+      variable_dependante = "log(productivite)",
       estimateur_as = NA_real_,
       erreur_standard = NA_real_,
       p_value = NA_real_,
@@ -168,11 +161,14 @@ estimer_as <- function(data, traitement, nom_traitement, groupe_lca) {
     ))
   }
   
-  stayers <- df_trim %>% dplyr::filter(S == 0)
-  switchers <- df_trim %>% dplyr::filter(S == 1)
+  stayers <- df_trim %>%
+    dplyr::filter(S == 0)
   
-  modele_stayers <- mgcv::gam(
-    delta_logY ~ s(D2, k = 10),
+  switchers <- df_trim %>%
+    dplyr::filter(S == 1)
+  
+  modele_stayers <- lm(
+    delta_logY ~ D2,
     data = stayers,
     na.action = na.omit
   )
@@ -185,26 +181,30 @@ estimer_as <- function(data, traitement, nom_traitement, groupe_lca) {
   estimateur_as <- sum(
     switchers$delta_D * (switchers$delta_logY - delta_logY_hat),
     na.rm = TRUE
-  ) / sum(
-    switchers$delta_D^2,
-    na.rm = TRUE
-  )
+  ) /
+    sum(
+      switchers$delta_D^2,
+      na.rm = TRUE
+    )
   
   # ---------------------------------------------------------------------------
-  # Bootstrap rapide par commune
+  # Bootstrap par commune
   # ---------------------------------------------------------------------------
   
   calculer_as_boot <- function(data_boot) {
     
-    stayers_boot <- data_boot %>% dplyr::filter(S == 0)
-    switchers_boot <- data_boot %>% dplyr::filter(S == 1)
+    stayers_boot <- data_boot %>%
+      dplyr::filter(S == 0)
+    
+    switchers_boot <- data_boot %>%
+      dplyr::filter(S == 1)
     
     if (nrow(stayers_boot) < min_stayers | nrow(switchers_boot) < min_switchers) {
       return(NA_real_)
     }
     
-    mod <- mgcv::gam(
-      delta_logY ~ s(D2, k = 10),
+    mod <- lm(
+      delta_logY ~ D2,
       data = stayers_boot,
       na.action = na.omit
     )
@@ -214,10 +214,11 @@ estimer_as <- function(data, traitement, nom_traitement, groupe_lca) {
     sum(
       switchers_boot$delta_D * (switchers_boot$delta_logY - y_hat),
       na.rm = TRUE
-    ) / sum(
-      switchers_boot$delta_D^2,
-      na.rm = TRUE
-    )
+    ) /
+      sum(
+        switchers_boot$delta_D^2,
+        na.rm = TRUE
+      )
   }
   
   ids <- unique(df_trim$id)
@@ -253,6 +254,7 @@ estimer_as <- function(data, traitement, nom_traitement, groupe_lca) {
   tibble::tibble(
     type_lca = groupe_lca,
     traitement = nom_traitement,
+    variable_dependante = "log(productivite)",
     estimateur_as = estimateur_as,
     erreur_standard = erreur_standard,
     p_value = p_value,
@@ -261,6 +263,7 @@ estimer_as <- function(data, traitement, nom_traitement, groupe_lca) {
     n_communes = dplyr::n_distinct(df_trim$id),
     n_stayers = n_stayers,
     n_switchers = n_switchers,
+    n_bootstrap_reussis = length(boot_results),
     commentaire = commentaire
   )
 }

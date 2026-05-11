@@ -1,11 +1,11 @@
 # -----------------------------------------------------------------------------
 # 02_as_foret.R
-# Estimer l'effet AS de la variation de forêt sur la productivité agricole
-# entre 2000 et 2012
+# Estimer l'effet AS de la variation de forêt sur le log de la productivité
+# agricole entre 2000 et 2012
 # -----------------------------------------------------------------------------
-# Entrée :
-#   data/processed/base_twfe_enrichie.parquet
-#   ou data/processed/base_twfe.parquet
+# Entrées :
+#   data/processed/twfe_data_enrichie.parquet
+#   ou data/processed/twfe_data.parquet
 #
 # Sorties :
 #   output/tables/as_foret_resultats.csv
@@ -42,19 +42,25 @@ if (!file.exists(fichier_base)) {
 
 if (!file.exists(fichier_base)) {
   stop(
-    "Base TWFE introuvable. Lance d'abord les scripts de préparation.",
+    "Base TWFE introuvable. Lancez d'abord les scripts de préparation.",
     call. = FALSE
   )
 }
 
 base <- arrow::read_parquet(fichier_base)
 
+check_required_cols(
+  base,
+  c("id", "periode", "productivite", "pct_foret", "pct_lisiere"),
+  "twfe_data"
+)
+
 # -----------------------------------------------------------------------------
 # 3. Construire une base longue standardisée
 # -----------------------------------------------------------------------------
-# Y = productivité agricole
+# Y = log de la productivité agricole
 # D = part de forêt
-# Z = part de lisière, utilisée seulement comme variable descriptive/contrôle
+# Z = part de lisière, utilisée seulement comme variable descriptive
 # -----------------------------------------------------------------------------
 
 df_long <- base %>%
@@ -65,10 +71,11 @@ df_long <- base %>%
     productivite,
     pct_foret,
     pct_lisiere,
-    dplyr::any_of(c("cluster", "type_lca"))
+    dplyr::any_of("type_lca")
   ) %>%
   dplyr::mutate(
-    Y = as.numeric(productivite),
+    productivite = as.numeric(productivite),
+    Y = safe_log(productivite),
     D = as.numeric(pct_foret),
     Z = as.numeric(pct_lisiere)
   ) %>%
@@ -86,7 +93,7 @@ df_long <- base %>%
 df_large <- df_long %>%
   dplyr::select(
     id,
-    dplyr::any_of(c("nom_commune", "cluster", "type_lca")),
+    dplyr::any_of(c("nom_commune", "type_lca")),
     periode,
     Y,
     D,
@@ -110,16 +117,13 @@ df_large <- df_long %>%
     delta_Y = Y3 - Y2,
     delta_Z = Z3 - Z2,
     S = as.integer(abs(delta_D) > seuil_switcher),
-    delta_logY = dplyr::if_else(Y2 > 0 & Y3 > 0, log(Y3) - log(Y2), NA_real_),
+    delta_logY = delta_Y,
     delta_Y_pre = Y2 - Y1,
-    delta_logY_pre = dplyr::if_else(Y1 > 0 & Y2 > 0, log(Y2) - log(Y1), NA_real_)
+    delta_logY_pre = delta_Y_pre
   )
 
 # -----------------------------------------------------------------------------
 # 5. Test placebo des tendances parallèles
-# -----------------------------------------------------------------------------
-# On teste si la variation future de forêt entre 2000 et 2012 explique déjà
-# l'évolution passée de la productivité entre 1990 et 2000.
 # -----------------------------------------------------------------------------
 
 modele_placebo <- lm(
@@ -169,7 +173,6 @@ message(
 message("Nombre de stayers et switchers après trimming :")
 print(table(df_trim$S))
 
-# Figure support commun
 p_support <- ggplot2::ggplot(
   df_trim,
   ggplot2::aes(x = D2, fill = factor(S))
@@ -197,6 +200,10 @@ ggplot2::ggsave(
 # -----------------------------------------------------------------------------
 # 7. Estimation AS
 # -----------------------------------------------------------------------------
+# On approxime la tendance des stayers par un modèle linéaire simple :
+# delta_logY ~ D2.
+# Cette option est plus rapide et plus stable que GAM dans les grands panels.
+# -----------------------------------------------------------------------------
 
 stayers <- df_trim %>% dplyr::filter(S == 0)
 switchers <- df_trim %>% dplyr::filter(S == 1)
@@ -205,8 +212,8 @@ if (nrow(stayers) < 30 | nrow(switchers) < 30) {
   stop("Trop peu de stayers ou de switchers pour estimer l'AS.", call. = FALSE)
 }
 
-modele_stayers <- mgcv::gam(
-  delta_logY ~ s(D2, k = 10),
+modele_stayers <- lm(
+  delta_logY ~ D2,
   data = stayers,
   na.action = na.omit
 )
@@ -222,21 +229,16 @@ delta_AS <- with(
     sum(delta_D^2, na.rm = TRUE)
 )
 
-# Figure tendance estimée chez les stayers
 p_tendance <- ggplot2::ggplot(
   df_trim,
   ggplot2::aes(x = D2, y = delta_logY, color = factor(S))
 ) +
   ggplot2::geom_point(alpha = 0.25) +
-  ggplot2::geom_smooth(
-    method = "gam",
-    formula = y ~ s(x, k = 10),
-    se = TRUE
-  ) +
+  ggplot2::geom_smooth(method = "lm", se = TRUE) +
   ggplot2::labs(
-    title = "Évolution de la productivité selon la forêt initiale",
+    title = "Évolution du log de productivité selon la forêt initiale",
     x = "Part de forêt en 2000",
-    y = "Variation log de productivité 2000-2012",
+    y = "Variation du log de productivité 2000-2012",
     color = "Groupe"
   ) +
   ggplot2::scale_color_discrete(
@@ -257,6 +259,7 @@ ggplot2::ggsave(
 # -----------------------------------------------------------------------------
 
 calculer_as <- function(data) {
+  
   stayers_boot <- data %>% dplyr::filter(S == 0)
   switchers_boot <- data %>% dplyr::filter(S == 1)
   
@@ -264,8 +267,8 @@ calculer_as <- function(data) {
     return(NA_real_)
   }
   
-  mod <- mgcv::gam(
-    delta_logY ~ s(D2, k = 10),
+  mod <- lm(
+    delta_logY ~ D2,
     data = stayers_boot,
     na.action = na.omit
   )
@@ -280,7 +283,6 @@ calculer_as <- function(data) {
 }
 
 ids <- unique(df_trim$id)
-
 boot_results <- numeric(n_bootstrap)
 
 for (b in seq_len(n_bootstrap)) {
@@ -304,6 +306,7 @@ ci_high <- stats::quantile(boot_results, 0.975)
 
 resultats_as <- tibble::tibble(
   traitement = "foret",
+  variable_dependante = "log(productivite)",
   seuil_switcher = seuil_switcher,
   estimateur_as = delta_AS,
   erreur_standard = se_delta,
@@ -323,3 +326,5 @@ write_csv2(
 )
 
 print(resultats_as)
+
+message("Estimation AS forêt terminée.")

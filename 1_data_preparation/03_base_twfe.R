@@ -47,9 +47,9 @@ clc_long <- clc_indicateurs %>%
 agri_panel <- agri_panel %>%
   mutate(
     periode = case_when(
-      agri_year == 1988 ~ 1L,
-      agri_year == 2000 ~ 2L,
-      agri_year == 2010 ~ 3L
+      agri_annee == 1988 ~ 1L,
+      agri_annee == 2000 ~ 2L,
+      agri_annee == 2010 ~ 3L
     )
   )
 
