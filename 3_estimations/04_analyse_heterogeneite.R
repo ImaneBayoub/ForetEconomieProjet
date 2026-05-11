@@ -191,66 +191,119 @@ estimer_as <- function(data, traitement, nom_traitement, groupe_lca) {
   # Bootstrap par commune
   # ---------------------------------------------------------------------------
   
-  calculer_as_boot <- function(data_boot) {
+  # calculer_as_boot <- function(data_boot) {
     
-    stayers_boot <- data_boot %>%
-      dplyr::filter(S == 0)
+  #   stayers_boot <- data_boot %>%
+  #     dplyr::filter(S == 0)
     
-    switchers_boot <- data_boot %>%
-      dplyr::filter(S == 1)
+  #   switchers_boot <- data_boot %>%
+  #     dplyr::filter(S == 1)
     
-    if (nrow(stayers_boot) < min_stayers | nrow(switchers_boot) < min_switchers) {
-      return(NA_real_)
-    }
+  #   if (nrow(stayers_boot) < min_stayers | nrow(switchers_boot) < min_switchers) {
+  #     return(NA_real_)
+  #   }
     
-    mod <- lm(
-      delta_logY ~ D2,
-      data = stayers_boot,
-      na.action = na.omit
+  #   mod <- lm(
+  #     delta_logY ~ D2,
+  #     data = stayers_boot,
+  #     na.action = na.omit
+  #   )
+    
+  #   y_hat <- stats::predict(mod, newdata = switchers_boot)
+    
+  #   sum(
+  #     switchers_boot$delta_D * (switchers_boot$delta_logY - y_hat),
+  #     na.rm = TRUE
+  #   ) /
+  #     sum(
+  #       switchers_boot$delta_D^2,
+  #       na.rm = TRUE
+  #     )
+  # }
+  
+  # ids <- unique(df_trim$id)
+  # boot_results <- numeric(n_bootstrap)
+  
+  # for (b in seq_len(n_bootstrap)) {
+  #   boot_ids <- sample(ids, size = length(ids), replace = TRUE)
+    
+  #   boot_df <- purrr::map_dfr(
+  #     boot_ids,
+  #     ~ df_trim %>% dplyr::filter(id == .x)
+  #   )
+    
+  #   boot_results[b] <- calculer_as_boot(boot_df)
+  # }
+  
+  # boot_results <- boot_results[!is.na(boot_results)]
+  
+  # if (length(boot_results) < 10) {
+  #   erreur_standard <- NA_real_
+  #   p_value <- NA_real_
+  #   ic_95_bas <- NA_real_
+  #   ic_95_haut <- NA_real_
+  #   commentaire <- "Bootstrap insuffisant"
+  # } else {
+  #   erreur_standard <- stats::sd(boot_results)
+  #   p_value <- 2 * (1 - stats::pnorm(abs(estimateur_as / erreur_standard)))
+  #   ic_95_bas <- stats::quantile(boot_results, 0.025)
+  #   ic_95_haut <- stats::quantile(boot_results, 0.975)
+  #   commentaire <- "OK"
+  # }
+  
+  # tibble::tibble(
+  #   type_lca = groupe_lca,
+  #   traitement = nom_traitement,
+  #   variable_dependante = "log(productivite)",
+  #   estimateur_as = estimateur_as,
+  #   erreur_standard = erreur_standard,
+  #   p_value = p_value,
+  #   ic_95_bas = ic_95_bas,
+  #   ic_95_haut = ic_95_haut,
+  #   n_communes = dplyr::n_distinct(df_trim$id),
+  #   n_stayers = n_stayers,
+  #   n_switchers = n_switchers,
+  #   n_bootstrap_reussis = length(boot_results),
+  #   commentaire = commentaire
+  # )
+
+  # ---------------------------------------------------------------------------
+  # Erreur standard rapide sans bootstrap
+  # ---------------------------------------------------------------------------
+  # L'estimateur AS correspond au coefficient d'une régression sans constante
+  # des résidus des switchers sur la variation du traitement.
+  # Cette méthode est beaucoup plus rapide que le bootstrap, mais ne tient pas
+  # compte de l'incertitude liée à l'estimation de la tendance chez les stayers.
+
+  switchers <- switchers %>%
+    dplyr::mutate(
+      residu_as = delta_logY - delta_logY_hat
     )
-    
-    y_hat <- stats::predict(mod, newdata = switchers_boot)
-    
-    sum(
-      switchers_boot$delta_D * (switchers_boot$delta_logY - y_hat),
-      na.rm = TRUE
-    ) /
-      sum(
-        switchers_boot$delta_D^2,
-        na.rm = TRUE
-      )
-  }
-  
-  ids <- unique(df_trim$id)
-  boot_results <- numeric(n_bootstrap)
-  
-  for (b in seq_len(n_bootstrap)) {
-    boot_ids <- sample(ids, size = length(ids), replace = TRUE)
-    
-    boot_df <- purrr::map_dfr(
-      boot_ids,
-      ~ df_trim %>% dplyr::filter(id == .x)
-    )
-    
-    boot_results[b] <- calculer_as_boot(boot_df)
-  }
-  
-  boot_results <- boot_results[!is.na(boot_results)]
-  
-  if (length(boot_results) < 10) {
-    erreur_standard <- NA_real_
+
+  modele_as <- lm(
+    residu_as ~ 0 + delta_D,
+    data = switchers
+  )
+
+  vcov_as <- sandwich::vcovHC(
+    modele_as,
+    type = "HC1"
+  )
+
+  erreur_standard <- sqrt(diag(vcov_as))[["delta_D"]]
+
+  if (is.na(erreur_standard) || erreur_standard == 0) {
     p_value <- NA_real_
     ic_95_bas <- NA_real_
     ic_95_haut <- NA_real_
-    commentaire <- "Bootstrap insuffisant"
+    commentaire <- "Erreur standard non calculable"
   } else {
-    erreur_standard <- stats::sd(boot_results)
     p_value <- 2 * (1 - stats::pnorm(abs(estimateur_as / erreur_standard)))
-    ic_95_bas <- stats::quantile(boot_results, 0.025)
-    ic_95_haut <- stats::quantile(boot_results, 0.975)
-    commentaire <- "OK"
+    ic_95_bas <- estimateur_as - 1.96 * erreur_standard
+    ic_95_haut <- estimateur_as + 1.96 * erreur_standard
+    commentaire <- "OK - SE HC1 sur switchers"
   }
-  
+
   tibble::tibble(
     type_lca = groupe_lca,
     traitement = nom_traitement,
@@ -263,7 +316,7 @@ estimer_as <- function(data, traitement, nom_traitement, groupe_lca) {
     n_communes = dplyr::n_distinct(df_trim$id),
     n_stayers = n_stayers,
     n_switchers = n_switchers,
-    n_bootstrap_reussis = length(boot_results),
+    methode_se = "HC1 sur switchers",
     commentaire = commentaire
   )
 }

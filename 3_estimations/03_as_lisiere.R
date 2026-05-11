@@ -321,6 +321,48 @@ write_csv2(
   path("output", "tables", "as_lisiere_resultats.csv")
 )
 
-print(resultats_as)
-
 message("Estimation AS lisière terminée.")
+
+
+# -----------------------------------------------------------------------------
+# 8. Erreur standard rapide sans bootstrap
+# -----------------------------------------------------------------------------
+
+switchers <- switchers %>%
+  dplyr::mutate(
+    residu_as = delta_logY - delta_logY_hat
+  )
+
+modele_as <- lm(
+  residu_as ~ 0 + delta_D,
+  data = switchers
+)
+
+vcov_as <- sandwich::vcovHC(
+  modele_as,
+  type = "HC1"
+)
+
+se_delta <- sqrt(diag(vcov_as))[["delta_D"]]
+
+t_stat <- delta_AS / se_delta
+p_val <- 2 * (1 - stats::pnorm(abs(t_stat)))
+
+ci_low <- delta_AS - 1.96 * se_delta
+ci_high <- delta_AS + 1.96 * se_delta
+
+resultats_as <- tibble::tibble(
+  traitement = "lisiere",
+  variable_dependante = "log(productivite)",
+  seuil_switcher = seuil_switcher,
+  estimateur_as = delta_AS,
+  erreur_standard = se_delta,
+  statistique_t = t_stat,
+  p_value = p_val,
+  ic_95_bas = ci_low,
+  ic_95_haut = ci_high,
+  n_observations_trim = nrow(df_trim),
+  n_stayers = sum(df_trim$S == 0),
+  n_switchers = sum(df_trim$S == 1),
+  methode_se = "HC1 sur switchers"
+)

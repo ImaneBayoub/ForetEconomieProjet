@@ -1,0 +1,2 @@
+traitement,variable_dependante,seuil_switcher,estimateur_as,erreur_standard,statistique_t,p_value,ic_95_bas,ic_95_haut,n_observations_trim,n_stayers,n_switchers,methode_se
+lisiere,log(productivite),0.005,-0.0038529964419270575,0.004517599830237114,-0.8528857328482825,0.3937226742961417,-0.012707492109191802,0.005001499225337686,19547,15732,3815,HC1 sur switchers

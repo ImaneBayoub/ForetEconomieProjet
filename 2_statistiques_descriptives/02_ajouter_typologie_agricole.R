@@ -60,13 +60,13 @@ if (is.na(lca_file)) {
     dplyr::left_join(lca_clean, by = "id")
 }
 
-write_csv2(twfe, path("data", "processed", "twfe_data_enriched.csv"))
-write_parquet2(twfe, path("data", "processed", "twfe_data_enriched.parquet"))
+write_csv2(twfe, path("data", "processed", "twfe_data_enrichie.csv"))
+write_parquet2(twfe, path("data", "processed", "twfe_data_enrichie.parquet"))
 
 summary <- twfe %>%
   dplyr::filter(periode == 2L) %>%
   dplyr::count(type_lca, name = "n_communes")
-write_csv2(summary, path("output", "tables", "lca_typology_counts.csv"))
+write_csv2(summary, path("output", "tables", "lca_typologie.csv"))
 
 message("Typologie agricole ajoutée. Résumé des classes LCA :")
 print(summary)

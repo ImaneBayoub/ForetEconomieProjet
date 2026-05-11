@@ -1,0 +1,7 @@
+type_lca,traitement,variable_dependante,estimateur_as,erreur_standard,p_value,ic_95_bas,ic_95_haut,n_communes,n_stayers,n_switchers,commentaire
+annuel,forêt,log(productivite),NA,NA,NA,NA,NA,0,0,0,Aucune observation exploitable
+annuel,lisière,log(productivite),NA,NA,NA,NA,NA,0,0,0,Aucune observation exploitable
+mixte,forêt,log(productivite),NA,NA,NA,NA,NA,0,0,0,Aucune observation exploitable
+mixte,lisière,log(productivite),NA,NA,NA,NA,NA,0,0,0,Aucune observation exploitable
+perenne,forêt,log(productivite),NA,NA,NA,NA,NA,0,0,0,Aucune observation exploitable
+perenne,lisière,log(productivite),NA,NA,NA,NA,NA,0,0,0,Aucune observation exploitable

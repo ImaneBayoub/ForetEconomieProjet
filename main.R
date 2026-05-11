@@ -32,3 +32,26 @@ source("3_estimations/04_analyse_heterogeneite.R")
 
 # Robustesse
 source("3_estimations/05_verifications_robustesse.R")
+
+
+# lire le fichier enrichi csv et le réenregistrer en parquet
+base <- read.csv(
+   path(
+     "data", "processed", "twfe_data_enrichie.csv"
+   )
+ )
+
+write_parquet(
+   base,
+   path(
+     "data", "processed", "twfe_data_enrichie.parquet"
+   )
+ )
+
+# lire à nouveau le parquet et afficher les noms de colonnes pour vérifier que tout est en ordre
+base <- read_parquet(
+   path(
+     "data", "processed", "twfe_data_enrichie.parquet"
+   )
+ )
+colnames(base)

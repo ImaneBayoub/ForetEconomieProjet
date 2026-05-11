@@ -38,7 +38,7 @@
 #     Carte thermique représentant, pour chaque classe, la fréquence de présence
 #     significative des catégories de cultures.
 #
-# Fichier d'entrée attendu :
+# Fichier d'entrée :
 #   data/interim/superficies_communes_2010.parquet
 #
 # Remarques :
@@ -46,8 +46,6 @@
 #     une estimation causale.
 #   - Elle est ensuite utilisée comme facteur d'hétérogénéité
 #     dans les estimations de l'effet de la forêt ou de la lisière.
-#   - L'interprétation agronomique des classes doit être faite à partir des
-#     profils moyens produits dans les sorties.
 # -----------------------------------------------------------------------------
 
 source("R/packages.R")
@@ -373,7 +371,7 @@ print(df_summary)
 # classe 4 : plutôt mixte, avec cultures permanentes plus fréquentes
 
 # ============================================================
-# Idée d'interprétation des clusters pour analyse future
+# Interprétation des clusters
 # ============================================================
 
 # Les classes LCA peuvent être relues selon une opposition
@@ -393,7 +391,7 @@ print(df_summary)
 # - Classe 5 : annuel diversifié
 # - Classe 6 : pérenne dominant (vigne)
 
-# Regroupement possible pour économétrie :
+# Regroupement cohérent pour économétrie :
 # - type_annuel  = classes 1, 3, 5
 # - type_mixte   = classe 2
 # - type_perenne = classes 4, 6
@@ -405,14 +403,3 @@ print(df_summary)
 # - les cultures annuelles devraient réagir plus faiblement,
 #   ou avec une dynamique différente
 # - les fourrages/prairies constituent un cas intermédiaire
-
-# Idée pour tests futurs :
-# - construire une variable de type de cluster (annuel / mixte / pérenne)
-# - puis estimer des interactions du type :
-#   outcome ~ foret * type_cluster + controles | id + time
-
-# Attention :
-# - cette typologie reste une interprétation agronomique des classes LCA,
-#   pas une sortie directe du modèle
-# - à valider si possible avec les parts moyennes (share_*) en plus des
-#   présences (presence_*)
