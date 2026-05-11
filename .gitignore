@@ -1,2 +1,18 @@
+# Data folders
 /data/raw/
 /data/interim/
+
+# Keep folder structure
+!/data/README.md
+!/output/.gitkeep
+!/output/tables/.gitkeep
+!/output/figures/.gitkeep
+
+# R
+.Rhistory
+.RData
+.Rproj.user/
+
+# OS
+.DS_Store
+Thumbs.db

@@ -1,0 +1,7 @@
+classe,n_communes,part_communes,prob_max_moy,uncertainty_moy,presence_cereales,presence_ol_prot_fibres,presence_cult_indus,presence_fourrages,presence_pommes_tub,presence_legumes_frais,presence_vignes,presence_cult_perm,share_cereales,share_ol_prot_fibres,share_cult_indus,share_fourrages,share_pommes_tub,share_legumes_frais,share_vignes,share_cult_perm
+1,10659,34.74,0.976,0.024,99.5,92.6,3.1,72.5,0,1.1,8.8,2.6,52.9,18.8,0.7,24.7,0,0.2,2.2,0.5
+2,14661,47.78,0.861,0.139,66,0,0.1,100,0,1.5,2.6,3.5,18.4,0.4,0.1,79.1,0,0.4,0.9,0.7
+3,2381,7.76,0.752,0.248,100,95,100,52.6,12.1,0.9,0,0,58.6,16.5,13.6,9.5,1.5,0.3,0,0
+4,625,2.04,0.848,0.152,34.4,3.4,14.1,37.6,10.2,50.6,33.8,77.9,11.4,0.8,5,11.5,3.2,16.7,12.2,39
+5,588,1.92,0.791,0.209,100,29.4,58.2,61.2,78.1,63.8,0,0.2,52.5,4.1,8.5,14,11.3,9.5,0,0.1
+6,1768,5.76,0.848,0.152,16.6,0,0,23.4,0,0,100,17.5,5.4,0.1,0,9.7,0,0.1,79.9,4.8
