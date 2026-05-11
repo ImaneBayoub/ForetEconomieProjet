@@ -29,10 +29,9 @@ Les données brutes ne sont pas versionnées dans le dépôt GitHub en raison de
 
 Les principales sources utilisées sont :
 
-données agricoles Agreste ;
-données Corine Land Cover issues de Copernicus ;
-contours communaux IGN ;
-données de superficies par cultures utilisées pour construire la typologie agricole.
+- données agricoles Agreste ;
+- données Corine Land Cover issues de Copernicus ;
+- contours communaux IGN.
 
 Les fichiers lourds doivent être placés dans data/raw/ ou téléchargés à l’aide du script :
 
@@ -46,17 +45,12 @@ Le fichier main.R fourni dans ce dépôt ne relance pas les scripts longs de pr�
 
 Il suppose donc que les bases suivantes existent déjà :
 
-data/processed/twfe_data.parquet
-data/processed/twfe_data_enrichie.parquet
+- data/processed/twfe_data.parquet
+- data/processed/twfe_data_enrichie.parquet
 
 La base twfe_data.parquet contient la base de panel principale.
 
-La base twfe_data_enrichie.parquet contient la même base, enrichie avec la typologie agricole issue de la LCA :
-
-classe_lca
-type_lca
-
-Si twfe_data_enrichie.parquet n’existe pas, certains scripts descriptifs et d’estimation par typologie agricole ne pourront pas être lancés.
+La base twfe_data_enrichie.parquet contient la même base, enrichie avec la typologie agricole issue de la LCA.
 
 ## Reproduire les résultats à partir des bases déjà construites
 
@@ -66,57 +60,57 @@ source("main.R")
 
 Le script main.R lance uniquement :
 
-les figures descriptives ;
-la table descriptive du rapport ;
-les estimations TWFE ;
-les estimateurs AS pour la forêt ;
-les estimateurs AS pour la lisière ;
-les analyses d’hétérogénéité selon la typologie agricole ;
-les vérifications de robustesse au seuil de définition des switchers.
+- les figures descriptives ;
+- la table descriptive du rapport ;
+- les estimations TWFE ;
+- les estimateurs AS pour la forêt ;
+- les estimateurs AS pour la lisière ;
+- les analyses d’hétérogénéité selon la typologie agricole ;
+- les vérifications de robustesse au seuil de définition des switchers.
 
 Il ne lance pas :
 
-les scripts de préparation des données ;
-les scripts de construction de la typologie LCA.
+- les scripts de préparation des données ;
+- les scripts de construction de la typologie LCA.
 
 ## Reproduire tout le pipeline depuis les données brutes
 
 Pour reconstruire toutes les bases depuis les données brutes, il faut lancer manuellement les scripts suivants, dans cet ordre :
 
-source("1_data_preparation/00_data_telechargement.R")
-source("1_data_preparation/01_agri_productivite.R")
-source("1_data_preparation/02_indicateurs_foret.R")
-source("1_data_preparation/03_base_twfe.R")
-source("1_data_preparation/04_superficies_cultures.R")
+- source("1_data_preparation/00_data_telechargement.R")
+- source("1_data_preparation/01_agri_productivite.R")
+- source("1_data_preparation/02_indicateurs_foret.R")
+- source("1_data_preparation/03_base_twfe.R")
+- source("1_data_preparation/04_superficies_cultures.R")
 
-source("2_statistiques_descriptives/01_typologie_lca_cultures.R")
-source("2_statistiques_descriptives/02_ajouter_typologie_agricole.R")
+- source("2_statistiques_descriptives/01_typologie_lca_cultures.R")
+- source("2_statistiques_descriptives/02_ajouter_typologie_agricole.R")
 
 Ces scripts peuvent être longs à exécuter, en particulier :
 
-l’extraction des indicateurs CLC par commune ;
-la construction de la typologie agricole par LCA.
+- l’extraction des indicateurs CLC par commune ;
+- la construction de la typologie agricole par LCA.
 
 ## Sorties produites
 
 Les sorties principales sont stockées dans :
 
-output/tables/
-output/figures/
+- output/tables/
+- output/figures/
 
 Les principaux fichiers produits sont notamment :
 
-output/tables/resultats_twfe.txt
-output/tables/coefficients_twfe.csv
-output/tables/as_foret_resultats.csv
-output/tables/as_lisiere_resultats.csv
-output/tables/as_par_typologie_agricole.csv
-output/tables/as_sensibilite_seuil.csv
-output/tables/table_descriptive_rapport.csv
+- output/tables/resultats_twfe.txt
+- output/tables/coefficients_twfe.csv
+- output/tables/as_foret_resultats.csv
+- output/tables/as_lisiere_resultats.csv
+- output/tables/as_par_typologie_agricole.csv
+- output/tables/as_sensibilite_seuil.csv
+- output/tables/table_descriptive_rapport.csv
 
 et plusieurs figures descriptives ou de robustesse dans :
 
-output/figures/
+- output/figures/
 
 ## Environnement R
 
