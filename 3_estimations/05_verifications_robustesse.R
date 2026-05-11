@@ -71,6 +71,7 @@ preparer_base_large <- function(base, traitement) {
       !is.na(D)
     ) %>%
     tidyr::pivot_wider(
+      id_cols = id,
       names_from = periode,
       values_from = c(Y, D),
       names_sep = ""

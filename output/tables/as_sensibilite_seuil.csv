@@ -1,61 +1,61 @@
 traitement,variable_dependante,seuil,estimateur_as,n_switchers,n_stayers,commentaire
-forêt,log(productivite),0.001,NA,0,0,Trop peu de stayers ou de switchers
-forêt,log(productivite),0.002,NA,0,0,Trop peu de stayers ou de switchers
-forêt,log(productivite),0.003,NA,0,0,Trop peu de stayers ou de switchers
-forêt,log(productivite),0.004,NA,0,0,Trop peu de stayers ou de switchers
-forêt,log(productivite),0.005,NA,0,0,Trop peu de stayers ou de switchers
-forêt,log(productivite),0.006,NA,0,0,Trop peu de stayers ou de switchers
-forêt,log(productivite),0.007,NA,0,0,Trop peu de stayers ou de switchers
-forêt,log(productivite),0.008,NA,0,0,Trop peu de stayers ou de switchers
-forêt,log(productivite),0.009000000000000001,NA,0,0,Trop peu de stayers ou de switchers
-forêt,log(productivite),0.010000000000000002,NA,0,0,Trop peu de stayers ou de switchers
-forêt,log(productivite),0.011,NA,0,0,Trop peu de stayers ou de switchers
-forêt,log(productivite),0.012,NA,0,0,Trop peu de stayers ou de switchers
-forêt,log(productivite),0.013000000000000001,NA,0,0,Trop peu de stayers ou de switchers
-forêt,log(productivite),0.014000000000000002,NA,0,0,Trop peu de stayers ou de switchers
-forêt,log(productivite),0.015,NA,0,0,Trop peu de stayers ou de switchers
-forêt,log(productivite),0.016,NA,0,0,Trop peu de stayers ou de switchers
-forêt,log(productivite),0.017,NA,0,0,Trop peu de stayers ou de switchers
-forêt,log(productivite),0.018000000000000002,NA,0,0,Trop peu de stayers ou de switchers
-forêt,log(productivite),0.019000000000000003,NA,0,0,Trop peu de stayers ou de switchers
-forêt,log(productivite),0.02,NA,0,0,Trop peu de stayers ou de switchers
-forêt,log(productivite),0.021,NA,0,0,Trop peu de stayers ou de switchers
-forêt,log(productivite),0.022000000000000002,NA,0,0,Trop peu de stayers ou de switchers
-forêt,log(productivite),0.023,NA,0,0,Trop peu de stayers ou de switchers
-forêt,log(productivite),0.024,NA,0,0,Trop peu de stayers ou de switchers
-forêt,log(productivite),0.025,NA,0,0,Trop peu de stayers ou de switchers
-forêt,log(productivite),0.026000000000000002,NA,0,0,Trop peu de stayers ou de switchers
-forêt,log(productivite),0.027000000000000003,NA,0,0,Trop peu de stayers ou de switchers
-forêt,log(productivite),0.028,NA,0,0,Trop peu de stayers ou de switchers
-forêt,log(productivite),0.029,NA,0,0,Trop peu de stayers ou de switchers
-forêt,log(productivite),0.03,NA,0,0,Trop peu de stayers ou de switchers
-lisière,log(productivite),0.001,NA,0,0,Trop peu de stayers ou de switchers
-lisière,log(productivite),0.002,NA,0,0,Trop peu de stayers ou de switchers
-lisière,log(productivite),0.003,NA,0,0,Trop peu de stayers ou de switchers
-lisière,log(productivite),0.004,NA,0,0,Trop peu de stayers ou de switchers
-lisière,log(productivite),0.005,NA,0,0,Trop peu de stayers ou de switchers
-lisière,log(productivite),0.006,NA,0,0,Trop peu de stayers ou de switchers
-lisière,log(productivite),0.007,NA,0,0,Trop peu de stayers ou de switchers
-lisière,log(productivite),0.008,NA,0,0,Trop peu de stayers ou de switchers
-lisière,log(productivite),0.009000000000000001,NA,0,0,Trop peu de stayers ou de switchers
-lisière,log(productivite),0.010000000000000002,NA,0,0,Trop peu de stayers ou de switchers
-lisière,log(productivite),0.011,NA,0,0,Trop peu de stayers ou de switchers
-lisière,log(productivite),0.012,NA,0,0,Trop peu de stayers ou de switchers
-lisière,log(productivite),0.013000000000000001,NA,0,0,Trop peu de stayers ou de switchers
-lisière,log(productivite),0.014000000000000002,NA,0,0,Trop peu de stayers ou de switchers
-lisière,log(productivite),0.015,NA,0,0,Trop peu de stayers ou de switchers
-lisière,log(productivite),0.016,NA,0,0,Trop peu de stayers ou de switchers
-lisière,log(productivite),0.017,NA,0,0,Trop peu de stayers ou de switchers
-lisière,log(productivite),0.018000000000000002,NA,0,0,Trop peu de stayers ou de switchers
-lisière,log(productivite),0.019000000000000003,NA,0,0,Trop peu de stayers ou de switchers
-lisière,log(productivite),0.02,NA,0,0,Trop peu de stayers ou de switchers
-lisière,log(productivite),0.021,NA,0,0,Trop peu de stayers ou de switchers
-lisière,log(productivite),0.022000000000000002,NA,0,0,Trop peu de stayers ou de switchers
-lisière,log(productivite),0.023,NA,0,0,Trop peu de stayers ou de switchers
-lisière,log(productivite),0.024,NA,0,0,Trop peu de stayers ou de switchers
-lisière,log(productivite),0.025,NA,0,0,Trop peu de stayers ou de switchers
-lisière,log(productivite),0.026000000000000002,NA,0,0,Trop peu de stayers ou de switchers
-lisière,log(productivite),0.027000000000000003,NA,0,0,Trop peu de stayers ou de switchers
-lisière,log(productivite),0.028,NA,0,0,Trop peu de stayers ou de switchers
-lisière,log(productivite),0.029,NA,0,0,Trop peu de stayers ou de switchers
-lisière,log(productivite),0.03,NA,0,0,Trop peu de stayers ou de switchers
+forêt,log(productivite),0.001,-0.0020175919501086805,5858,12613,OK
+forêt,log(productivite),0.002,-0.001939709955844285,5784,12716,OK
+forêt,log(productivite),0.003,-0.0016849314965778081,5785,12795,OK
+forêt,log(productivite),0.004,-0.0016446771562324018,5775,12865,OK
+forêt,log(productivite),0.005,-0.0016428643266170574,5791,12950,OK
+forêt,log(productivite),0.006,-0.0015666684773445413,5757,13000,OK
+forêt,log(productivite),0.007,-0.0014533175928167334,5807,13059,OK
+forêt,log(productivite),0.008,-0.0015179782354445659,5810,13105,OK
+forêt,log(productivite),0.009000000000000001,-0.001628247484249727,5811,13156,OK
+forêt,log(productivite),0.010000000000000002,-0.001627305853652845,5853,13197,OK
+forêt,log(productivite),0.011,-0.0015832710728730488,5925,13252,OK
+forêt,log(productivite),0.012,-0.0015829888948347083,5886,13292,OK
+forêt,log(productivite),0.013000000000000001,-0.0015047299130509656,5907,13336,OK
+forêt,log(productivite),0.014000000000000002,-0.0017655578760750331,5961,13386,OK
+forêt,log(productivite),0.015,-0.001880367791231902,6044,13434,OK
+forêt,log(productivite),0.016,-0.0018324534946697934,6085,13472,OK
+forêt,log(productivite),0.017,-0.0019066641249219137,6191,13514,OK
+forêt,log(productivite),0.018000000000000002,-0.001846243729025325,6191,13551,OK
+forêt,log(productivite),0.019000000000000003,-0.001762472098135174,6256,13577,OK
+forêt,log(productivite),0.02,-0.0019483316117415816,6332,13618,OK
+forêt,log(productivite),0.021,-0.0020397495617761312,6371,13645,OK
+forêt,log(productivite),0.022000000000000002,-0.0019937579410599228,6408,13685,OK
+forêt,log(productivite),0.023,-0.002057311898955748,6411,13711,OK
+forêt,log(productivite),0.024,-0.0018281749737498923,6438,13745,OK
+forêt,log(productivite),0.025,-0.0015370047585567177,6500,13786,OK
+forêt,log(productivite),0.026000000000000002,-0.001831968286703076,6598,13817,OK
+forêt,log(productivite),0.027000000000000003,-0.0016991271962851168,6699,13849,OK
+forêt,log(productivite),0.028,-0.0017518884269702149,6697,13876,OK
+forêt,log(productivite),0.029,-0.0016538267990892364,6743,13911,OK
+forêt,log(productivite),0.03,-0.0016671644590633848,6815,13950,OK
+lisière,log(productivite),0.001,-0.006130487547224002,3232,15198,OK
+lisière,log(productivite),0.002,-0.005676215026585079,3288,15378,OK
+lisière,log(productivite),0.003,-0.005130077003259155,3562,15514,OK
+lisière,log(productivite),0.004,-0.004507244679767324,3717,15620,OK
+lisière,log(productivite),0.005,-0.0038529964419270575,3815,15732,OK
+lisière,log(productivite),0.006,-0.0034411294486400255,3983,15834,OK
+lisière,log(productivite),0.007,-0.0014739187665507522,4092,15955,OK
+lisière,log(productivite),0.008,-9.415507399369189e-4,4187,16045,OK
+lisière,log(productivite),0.009000000000000001,-0.0010177331527368918,4364,16143,OK
+lisière,log(productivite),0.010000000000000002,-9.642964956176598e-4,4522,16240,OK
+lisière,log(productivite),0.011,-0.00200328177918121,4538,16328,OK
+lisière,log(productivite),0.012,-0.00181533574362817,4604,16400,OK
+lisière,log(productivite),0.013000000000000001,-0.0019115837026495756,4697,16468,OK
+lisière,log(productivite),0.014000000000000002,-0.0012659986426085733,4711,16520,OK
+lisière,log(productivite),0.015,-0.0019421336100890693,4765,16585,OK
+lisière,log(productivite),0.016,-0.0014429532522479316,4824,16635,OK
+lisière,log(productivite),0.017,-0.00183773147046791,4859,16698,OK
+lisière,log(productivite),0.018000000000000002,-0.0024504918692030233,4896,16749,OK
+lisière,log(productivite),0.019000000000000003,-0.0024846238081500252,4920,16801,OK
+lisière,log(productivite),0.02,-0.0016039908726558788,4954,16841,OK
+lisière,log(productivite),0.021,-0.00209572400754129,4971,16902,OK
+lisière,log(productivite),0.022000000000000002,-0.001232759607547996,4992,16940,OK
+lisière,log(productivite),0.023,-7.321223677109884e-4,5051,16983,OK
+lisière,log(productivite),0.024,-9.311616549155707e-4,5093,17021,OK
+lisière,log(productivite),0.025,-5.597982099255664e-4,5096,17056,OK
+lisière,log(productivite),0.026000000000000002,-5.691556293168581e-4,5122,17097,OK
+lisière,log(productivite),0.027000000000000003,-0.00105007736840429,5143,17133,OK
+lisière,log(productivite),0.028,-0.0018371896101786504,5160,17171,OK
+lisière,log(productivite),0.029,-0.002251308517808066,5160,17203,OK
+lisière,log(productivite),0.03,-0.0020953587053964867,5180,17242,OK
