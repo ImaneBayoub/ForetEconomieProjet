@@ -352,7 +352,7 @@ resultats_as <- tibble::tibble(
 
 write_csv2(
   resultats_as,
-  path("output", "tables", "lisiere_resultats.csv")
+  path("output", "tables", "as_lisiere_resultats.csv")
 )
 
 message("Estimation AS lisière terminée.")

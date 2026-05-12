@@ -38,7 +38,7 @@ source("3_estimations/01_twfe_benchmark.R")
 source("3_estimations/02_as_foret.R")
 source("3_estimations/03_as_lisiere.R")
 
-# Hétérogénéité LCA
+# Hétérogénéité
 source("3_estimations/04_analyse_heterogeneite.R")
 
 # Robustesse
