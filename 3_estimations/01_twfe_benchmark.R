@@ -1,5 +1,5 @@
 # -----------------------------------------------------------------------------
-# 01_twfe.R
+# 01_twfe_benchmark.R
 # Estimations TWFE à partir de la base d'analyse unique
 # -----------------------------------------------------------------------------
 # Estimations principales :
@@ -11,7 +11,6 @@
 #
 # Entrées :
 #   data/processed/twfe_data_enrichie.parquet
-#   ou data/processed/twfe_data.parquet
 #
 # Sorties :
 #   output/tables/resultats_twfe.txt

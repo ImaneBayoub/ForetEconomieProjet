@@ -11,9 +11,8 @@
 #   output/tables/as_lisiere_resultats.csv
 #   output/tables/as_lisiere_placebo.csv
 #   output/tables/as_lisiere_sensibilite_seuil.csv
-#   output/figures/as_lisiere_support_commun.png
-#   output/figures/as_lisiere_tendance_stayers.png
-#   output/figures/as_lisiere_effet_selon_seuil.png
+#   output/figures/lisiere_support_commun.png
+#   output/figures/lisiere_tendance_stayers.png
 # -----------------------------------------------------------------------------
 
 source("R/packages.R")
@@ -26,7 +25,7 @@ message_step("Estimation AS : effet de la lisière")
 # 1. Paramètres
 # -----------------------------------------------------------------------------
 
-seuil_switcher <- 0.005
+seuil_switcher <- 0.03
 n_bootstrap <- 200
 set.seed(123)
 
@@ -169,7 +168,7 @@ figure_placebo <- ggplot2::ggplot(
   ggplot2::theme_minimal()
 
 ggplot2::ggsave(
-  filename = path("output", "figures", "as_lisiere_placebo.png"),
+  filename = path("output", "figures", "lisiere_placebo.png"),
   plot = figure_placebo,
   width = 7,
   height = 5,
@@ -225,7 +224,7 @@ p_support <- ggplot2::ggplot(
   ggplot2::theme_minimal()
 
 ggplot2::ggsave(
-  filename = path("output", "figures", "as_lisiere_support_commun.png"),
+  filename = path("output", "figures", "lisiere_support_commun.png"),
   plot = p_support,
   width = 8,
   height = 5,
@@ -278,7 +277,7 @@ p_tendance <- ggplot2::ggplot(
   ggplot2::theme_minimal()
 
 ggplot2::ggsave(
-  filename = path("output", "figures", "as_lisiere_tendance_stayers.png"),
+  filename = path("output", "figures", "lisiere_tendance_stayers.png"),
   plot = p_tendance,
   width = 8,
   height = 5,
@@ -353,7 +352,7 @@ resultats_as <- tibble::tibble(
 
 write_csv2(
   resultats_as,
-  path("output", "tables", "as_lisiere_resultats.csv")
+  path("output", "tables", "lisiere_resultats.csv")
 )
 
 message("Estimation AS lisière terminée.")
