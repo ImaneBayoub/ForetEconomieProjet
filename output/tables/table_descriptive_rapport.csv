@@ -1,10 +1,10 @@
 variable,moyenne,mediane,ecart_type,n
-"Lisière, panel complet",3.163,0,5.506,92650
-Variation lisière 2000-1990,0.022,0,1.297,30566
-Variation lisière 2012-2000,-0.111,0,1.129,28227
-"Part de forêt, panel complet",16.758,1.794,25.81,92650
-Variation forêt 2000-1990,0.03,0,5.633,30566
-Variation forêt 2012-2000,-0.453,0,4.367,28227
-"Productivité agricole, panel complet",2.596,1.364,8.131,92650
-Variation productivité 2000-1990,0.142,-0.055,7.945,30566
-Variation productivité 2012-2000,0.032,-0.036,5.81,28227
+"Lisière, panel complet",2.602,0,5.189,92576
+Variation lisière 2000-1990,0.007,0,1.098,30542
+Variation lisière 2012-2000,-0.001,0,0.952,28209
+"Part de forêt, panel complet",12.603,0,22.465,92576
+Variation forêt 2000-1990,-0.111,0,4.331,30542
+Variation forêt 2012-2000,0.014,0,3.532,28209
+"Productivité agricole, panel complet",2.597,1.364,8.135,92576
+Variation productivité 2000-1990,0.143,-0.054,7.948,30542
+Variation productivité 2012-2000,0.032,-0.036,5.812,28209

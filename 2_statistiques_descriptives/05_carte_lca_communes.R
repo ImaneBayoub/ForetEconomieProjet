@@ -1,10 +1,10 @@
 # -----------------------------------------------------------------------------
-# 06_carte_lca_communes.R
+# 05_carte_lca_communes.R
 # Cartes des clusters LCA et de l'incertitude de classification par commune
 # -----------------------------------------------------------------------------
 # Entrées :
 #   output/tables/lca_communes_classes.csv
-#   data/raw/admin_express/.../ADE_4-0_GPKG_LAMB93_FXX-ED2025-11-20.gpkg
+#   data/raw/communes/ADE_4-0_GPKG_LAMB93_FXX-ED2025-11-20.gpkg
 #
 # Sorties :
 #   output/figures/carte_lca_clusters.png
@@ -15,9 +15,6 @@ source("R/packages.R")
 source("R/paths.R")
 source("R/utils.R")
 
-library(sf)
-library(ggplot2)
-
 message_step("Carte des clusters LCA par commune")
 
 # ============================================================
@@ -26,14 +23,7 @@ message_step("Carte des clusters LCA par commune")
 
 classes_path <- path("output", "tables", "lca_communes_classes.csv")
 
-gpkg_root <- path(
-  "data", "raw", "admin_express",
-  "ADMIN-EXPRESS_4-0__GPKG_LAMB93_FXX_2025-11-20",
-  "ADMIN-EXPRESS",
-  "1_DONNEES_LIVRAISON_2025-11-00136",
-  "ADE_4-0_GPKG_LAMB93_FXX-ED2025-11-20",
-  "ADE_4-0_GPKG_LAMB93_FXX-ED2025-11-20.gpkg"
-)
+gpkg_root <- path("data", "raw", "communes", "ADE_4-0_GPKG_LAMB93_FXX-ED2025-11-20.gpkg")
 
 out_map_cluster <- path("output", "figures", "carte_lca_clusters.png")
 out_map_uncert  <- path("output", "figures", "carte_lca_incertitude.png")
