@@ -6,16 +6,6 @@
 #   Examiner la distribution de |ΔD| entre 2000 et 2012 pour choisir un seuil
 #   minimal de variation du traitement.
 #
-# Principe :
-#   Pour chaque traitement, on calcule :
-#     delta_D = D3 - D2
-#     abs_delta_D = |delta_D|
-#
-#   Le script produit :
-#     - un histogramme de |delta_D| ;
-#     - une courbe du nombre de switchers selon le seuil ;
-#     - un tableau des diagnostics par seuil.
-#
 # Entrée :
 #   data/processed/twfe_data_enrichie.parquet
 #   ou data/processed/twfe_data.parquet

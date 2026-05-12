@@ -38,9 +38,9 @@ source("3_estimations/01_twfe_benchmark.R")
 source("3_estimations/02_as_foret.R")
 source("3_estimations/03_as_lisiere.R")
 
-# Hétérogénéité LCA et hausse ou baisse de la forêt
+# Hétérogénéité LCA
 source("3_estimations/04_analyse_heterogeneite.R")
-source("3_estimations/05_as_hausse_baisse.R")
 
 # Robustesse
-source("3_estimations/06_verifications_robustesse.R")
+source("3_estimations/05_robustesse_sens_variation.R")
+source("3_estimations/06_robustesse_seuil_switchers.R")

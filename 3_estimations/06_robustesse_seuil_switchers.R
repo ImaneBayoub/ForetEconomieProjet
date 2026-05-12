@@ -1,5 +1,5 @@
 # -----------------------------------------------------------------------------
-# 07_verifications_robustesse.R
+# 06_robustesse_seuil_switchers.R
 # Sensibilité des estimateurs AS au seuil de définition des switchers
 # -----------------------------------------------------------------------------
 # Objectif :

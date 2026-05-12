@@ -1,10 +1,19 @@
 # -----------------------------------------------------------------------------
-# 05_as_hausses_baisses_foret_lisiere.R
-# Estimation AS séparée pour les hausses et les baisses de forêt et de lisière.
+# 05_robustesse_sens_variation.R
+# Sensibilité des estimateurs AS à la séparation entre hausses et baisses de forêt et de lisière
 # -----------------------------------------------------------------------------
-# Output :
-# - output/tables/as_hausses_baisses.csv
-# - output/figures/as_hausses_baisses.png
+# Objectif :
+#    Estimer séparément les AS pour les hausses et les baisses de forêt et de
+#    lisière, en appliquant la même méthodologie que dans les estimations principales.
+#    Cela permet de vérifier si les résultats globaux sont portés par des effets
+#    symétriques ou s'ils sont principalement liés à un sens de changement.
+#
+# Entrée :
+#    - data/processed/twfe_data_enrichie.parquet
+#
+# Sorties :
+#    - output/tables/as_hausses_baisses.csv
+#    - output/figures/as_hausses_baisses.png
 # -----------------------------------------------------------------------------
 
 source("R/packages.R")

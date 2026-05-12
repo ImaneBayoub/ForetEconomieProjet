@@ -1,7 +1,7 @@
 # -----------------------------------------------------------------------------
 # 02_as_foret.R
-# Estimer l'effet AS de la variation de forêt sur le log de la productivité
-# agricole entre 2000 et 2012
+# Estimer l'effet AS (Average Slope of Switchers) de la variation de forêt
+# sur le log de la productivité agricole entre 2000 et 2012
 # -----------------------------------------------------------------------------
 # Entrées :
 #   data/processed/twfe_data_enrichie.parquet

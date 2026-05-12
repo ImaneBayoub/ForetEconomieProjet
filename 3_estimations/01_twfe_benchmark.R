@@ -6,7 +6,7 @@
 #   log(productivité agricole) ~ part de forêt | effets fixes commune + période
 #   log(productivité agricole) ~ part de lisière | effets fixes commune + période
 #
-# Robustesse / hétérogénéité :
+# Hétérogénéité :
 #   interactions avec la typologie agricole LCA
 #
 # Entrées :
