@@ -33,12 +33,14 @@ source("2_statistiques_descriptives/04_table_descriptive_rapport.R")
 source("2_statistiques_descriptives/05_carte_lca_communes.R")
 
 # Estimations
-source("3_estimations/01_twfe.R")
+source("3_estimations/00_seuil_switchers.R")
+source("3_estimations/01_twfe_benchmark.R")
 source("3_estimations/02_as_foret.R")
 source("3_estimations/03_as_lisiere.R")
 
-# Hétérogénéité LCA
+# Hétérogénéité LCA et hausse ou baisse de la forêt
 source("3_estimations/04_analyse_heterogeneite.R")
+source("3_estimations/05_as_hausse_baisse.R")
 
 # Robustesse
-source("3_estimations/05_verifications_robustesse.R")
+source("3_estimations/06_verifications_robustesse.R")
