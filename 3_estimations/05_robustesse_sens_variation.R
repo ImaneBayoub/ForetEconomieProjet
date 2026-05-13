@@ -190,7 +190,8 @@ estimer_as_sens <- function(df_large, traitement_cible, sens) {
         n_switchers = 0,
         lower_D2 = NA_real_,
         upper_D2 = NA_real_,
-        n_bootstrap_reussis = 200
+        methode_se = "HC1 sur switchers",
+        commentaire = "Aucune observation exploitable"
       )
     )
   }
@@ -246,7 +247,8 @@ estimer_as_sens <- function(df_large, traitement_cible, sens) {
         n_switchers = n_switchers,
         lower_D2 = lower_D2,
         upper_D2 = upper_D2,
-        n_bootstrap_reussis = 200
+        methode_se = "HC1 sur switchers",
+        commentaire = "Trop peu de stayers ou de switchers"
       )
     )
   }
@@ -254,6 +256,7 @@ estimer_as_sens <- function(df_large, traitement_cible, sens) {
   # ---------------------------------------------------------------------------
   # Test placebo des pré-tendances
   # ---------------------------------------------------------------------------
+  # On teste si le changement futur du traitement prédit la variation passée de Y.
   
   modele_placebo <- lm(
     delta_logY_pre ~ D2 + delta_D,
@@ -281,15 +284,14 @@ estimer_as_sens <- function(df_large, traitement_cible, sens) {
     dplyr::filter(S == 1)
   
   k_gam <- min(10, floor(nrow(stayers) / 5))
-
+  
   if (k_gam < 4) {
     stop("Trop peu de stayers pour estimer un GAM flexible.", call. = FALSE)
   }
-
+  
   modele_stayers <- mgcv::gam(
     delta_logY ~ s(D2, k = k_gam),
     data = stayers,
-    method = "REML",
     na.action = na.omit
   )
   
@@ -323,7 +325,7 @@ estimer_as_sens <- function(df_large, traitement_cible, sens) {
         n_switchers = n_switchers,
         lower_D2 = lower_D2,
         upper_D2 = upper_D2,
-        n_bootstrap_reussis = 200,
+        methode_se = "HC1 sur switchers",
         commentaire = "Dénominateur AS nul"
       )
     )
@@ -384,7 +386,8 @@ estimer_as_sens <- function(df_large, traitement_cible, sens) {
     n_switchers = n_switchers,
     lower_D2 = lower_D2,
     upper_D2 = upper_D2,
-    n_bootstrap_reussis = 200
+    methode_se = "HC1 sur switchers",
+    commentaire = commentaire
   )
 }
 

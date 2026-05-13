@@ -285,102 +285,51 @@ ggplot2::ggsave(
 # 8. Bootstrap par commune
 # -----------------------------------------------------------------------------
 
-# calculer_as <- function(data) {
+calculer_as <- function(data) {
   
-#   stayers_boot <- data %>% dplyr::filter(S == 0)
-#   switchers_boot <- data %>% dplyr::filter(S == 1)
+  stayers_boot <- data %>% dplyr::filter(S == 0)
+  switchers_boot <- data %>% dplyr::filter(S == 1)
   
-#   if (nrow(stayers_boot) < 30 | nrow(switchers_boot) < 30) {
-#     return(NA_real_)
-#   }
+  if (nrow(stayers_boot) < 30 | nrow(switchers_boot) < 30) {
+    return(NA_real_)
+  }
   
-#   mod <- lm(
-#     delta_logY ~ D2,
-#     data = stayers_boot,
-#     na.action = na.omit
-#   )
-  
-#   y_hat <- stats::predict(mod, newdata = switchers_boot)
-  
-#   sum(
-#     switchers_boot$delta_D * (switchers_boot$delta_logY - y_hat),
-#     na.rm = TRUE
-#   ) /
-#     sum(switchers_boot$delta_D^2, na.rm = TRUE)
-# }
-
-# ids <- unique(df_trim$id)
-# boot_results <- numeric(n_bootstrap)
-
-# for (b in seq_len(n_bootstrap)) {
-#   boot_ids <- sample(ids, size = length(ids), replace = TRUE)
-  
-#   boot_df <- purrr::map_dfr(
-#     boot_ids,
-#     ~ df_trim %>% dplyr::filter(id == .x)
-#   )
-  
-#   boot_results[b] <- calculer_as(boot_df)
-# }
-
-# boot_results <- boot_results[!is.na(boot_results)]
-
-# se_delta <- stats::sd(boot_results)
-# t_stat <- delta_AS / se_delta
-# p_val <- 2 * (1 - stats::pnorm(abs(t_stat)))
-# ci_low <- stats::quantile(boot_results, 0.025)
-# ci_high <- stats::quantile(boot_results, 0.975)
-
-# resultats_as <- tibble::tibble(
-#   traitement = "foret",
-#   variable_dependante = "log(productivite)",
-#   seuil_switcher = seuil_switcher,
-#   estimateur_as = delta_AS,
-#   erreur_standard = se_delta,
-#   statistique_t = t_stat,
-#   p_value = p_val,
-#   ic_95_bas = ci_low,
-#   ic_95_haut = ci_high,
-#   n_observations_trim = nrow(df_trim),
-#   n_stayers = sum(df_trim$S == 0),
-#   n_switchers = sum(df_trim$S == 1),
-#   n_bootstrap_reussis = length(boot_results)
-# )
-
-# write_csv2(
-#   resultats_as,
-#   path("output", "tables", "as_foret_resultats.csv")
-# )
-
-message("Estimation AS forêt terminée.")
-
-
-# -----------------------------------------------------------------------------
-# 8. Erreur standard rapide sans bootstrap
-# -----------------------------------------------------------------------------
-
-switchers <- switchers %>%
-  dplyr::mutate(
-    residu_as = delta_logY - delta_logY_hat
+  mod <- lm(
+    delta_logY ~ D2,
+    data = stayers_boot,
+    na.action = na.omit
   )
+  
+  y_hat <- stats::predict(mod, newdata = switchers_boot)
+  
+  sum(
+    switchers_boot$delta_D * (switchers_boot$delta_logY - y_hat),
+    na.rm = TRUE
+  ) /
+    sum(switchers_boot$delta_D^2, na.rm = TRUE)
+}
 
-modele_as <- lm(
-  residu_as ~ 0 + delta_D,
-  data = switchers
-)
+ids <- unique(df_trim$id)
+boot_results <- numeric(n_bootstrap)
 
-vcov_as <- sandwich::vcovHC(
-  modele_as,
-  type = "HC1"
-)
+for (b in seq_len(n_bootstrap)) {
+  boot_ids <- sample(ids, size = length(ids), replace = TRUE)
+  
+  boot_df <- purrr::map_dfr(
+    boot_ids,
+    ~ df_trim %>% dplyr::filter(id == .x)
+  )
+  
+  boot_results[b] <- calculer_as(boot_df)
+}
 
-se_delta <- sqrt(diag(vcov_as))[["delta_D"]]
+boot_results <- boot_results[!is.na(boot_results)]
 
+se_delta <- stats::sd(boot_results)
 t_stat <- delta_AS / se_delta
 p_val <- 2 * (1 - stats::pnorm(abs(t_stat)))
-
-ci_low <- delta_AS - 1.96 * se_delta
-ci_high <- delta_AS + 1.96 * se_delta
+ci_low <- stats::quantile(boot_results, 0.025)
+ci_high <- stats::quantile(boot_results, 0.975)
 
 resultats_as <- tibble::tibble(
   traitement = "foret",
@@ -395,10 +344,12 @@ resultats_as <- tibble::tibble(
   n_observations_trim = nrow(df_trim),
   n_stayers = sum(df_trim$S == 0),
   n_switchers = sum(df_trim$S == 1),
-  n_bootstrap_reussis = 200
+  n_bootstrap_reussis = length(boot_results)
 )
 
 write_csv2(
   resultats_as,
   path("output", "tables", "as_foret_resultats.csv")
 )
+
+message("Estimation AS forêt terminée.")

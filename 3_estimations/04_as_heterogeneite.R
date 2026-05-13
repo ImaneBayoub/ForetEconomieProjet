@@ -304,163 +304,104 @@ estimer_as <- function(data, traitement, nom_traitement, groupe_lca) {
   # ---------------------------------------------------------------------------
   # Bootstrap par commune
   # ---------------------------------------------------------------------------
-  # calculer_as_boot <- function(data_boot) {
+  calculer_as_boot <- function(data_boot) {
     
-  #   stayers_boot <- data_boot %>%
-  #     dplyr::filter(S == 0)
+    stayers_boot <- data_boot %>%
+      dplyr::filter(S == 0)
     
-  #   switchers_boot <- data_boot %>%
-  #     dplyr::filter(S == 1)
+    switchers_boot <- data_boot %>%
+      dplyr::filter(S == 1)
     
-  #   if (nrow(stayers_boot) < min_stayers | nrow(switchers_boot) < min_switchers) {
-  #     return(NA_real_)
-  #   }
+    if (nrow(stayers_boot) < min_stayers | nrow(switchers_boot) < min_switchers) {
+      return(NA_real_)
+    }
     
-  #   denom_boot <- sum(
-  #     switchers_boot$delta_D^2,
-  #     na.rm = TRUE
-  #   )
+    denom_boot <- sum(
+      switchers_boot$delta_D^2,
+      na.rm = TRUE
+    )
     
-  #   if (is.na(denom_boot) || denom_boot == 0) {
-  #     return(NA_real_)
-  #   }
+    if (is.na(denom_boot) || denom_boot == 0) {
+      return(NA_real_)
+    }
     
-  #   mod_boot <- lm(
-  #     delta_logY ~ D2,
-  #     data = stayers_boot,
-  #     na.action = na.omit
-  #   )
+    mod_boot <- lm(
+      delta_logY ~ D2,
+      data = stayers_boot,
+      na.action = na.omit
+    )
     
-  #   y_hat_boot <- stats::predict(
-  #     mod_boot,
-  #     newdata = switchers_boot
-  #   )
+    y_hat_boot <- stats::predict(
+      mod_boot,
+      newdata = switchers_boot
+    )
     
-  #   sum(
-  #     switchers_boot$delta_D * (switchers_boot$delta_logY - y_hat_boot),
-  #     na.rm = TRUE
-  #   ) / denom_boot
-  # }
+    sum(
+      switchers_boot$delta_D * (switchers_boot$delta_logY - y_hat_boot),
+      na.rm = TRUE
+    ) / denom_boot
+  }
 
-  # ids <- unique(df_trim$id)
+  ids <- unique(df_trim$id)
 
-  # boot_results <- numeric(n_bootstrap)
+  boot_results <- numeric(n_bootstrap)
 
-  # for (b in seq_len(n_bootstrap)) {
+  for (b in seq_len(n_bootstrap)) {
     
-  #   boot_ids <- sample(
-  #     ids,
-  #     size = length(ids),
-  #     replace = TRUE
-  #   )
+    boot_ids <- sample(
+      ids,
+      size = length(ids),
+      replace = TRUE
+    )
     
-  #   boot_df <- purrr::map_dfr(
-  #     boot_ids,
-  #     ~ df_trim %>% dplyr::filter(id == .x)
-  #   )
+    boot_df <- purrr::map_dfr(
+      boot_ids,
+      ~ df_trim %>% dplyr::filter(id == .x)
+    )
     
-  #   boot_results[b] <- calculer_as_boot(boot_df)
-  # }
+    boot_results[b] <- calculer_as_boot(boot_df)
+  }
 
-  # boot_results <- boot_results[!is.na(boot_results)]
+  boot_results <- boot_results[!is.na(boot_results)]
 
-  # if (length(boot_results) < 10) {
-  #   erreur_standard <- NA_real_
-  #   statistique_t <- NA_real_
-  #   p_value <- NA_real_
-  #   ic_95_bas <- NA_real_
-  #   ic_95_haut <- NA_real_
-  #   methode_se <- "Bootstrap par commune"
-  #   commentaire <- "Bootstrap insuffisant"
-  # } else {
-  #   erreur_standard <- stats::sd(boot_results)
-  #   statistique_t <- estimateur_as / erreur_standard
-  #   p_value <- 2 * (1 - stats::pnorm(abs(statistique_t)))
-  #   ic_95_bas <- stats::quantile(
-  #     boot_results,
-  #     0.025,
-  #     na.rm = TRUE,
-  #     names = FALSE
-  #   )
-  #   ic_95_haut <- stats::quantile(
-  #     boot_results,
-  #     0.975,
-  #     na.rm = TRUE,
-  #     names = FALSE
-  #   )
-  #   methode_se <- paste0(
-  #     "Bootstrap par commune, ",
-  #     length(boot_results),
-  #     "/",
-  #     n_bootstrap,
-  #     " réplications réussies"
-  #   )
-    
-  #   commentaire <- ifelse(
-  #     isTRUE(placebo_rejet),
-  #     "AS estimé mais placebo rejette les pré-tendances",
-  #     "OK - bootstrap, placebo non rejeté"
-  #   )
-  # }
-    
-  # ---------------------------------------------------------------------------
-  # Erreur standard rapide sans bootstrap
-  # ---------------------------------------------------------------------------
-  methode_se <- "HC1 sur switchers"
-
-  modele_as <- lm(
-    residu_as ~ 0 + delta_D,
-    data = switchers
-  )
-  
-  vcov_as <- sandwich::vcovHC(
-    modele_as,
-    type = "HC1"
-  )
-  
-  erreur_standard <- sqrt(diag(vcov_as))[["delta_D"]]
-  
-  if (is.na(erreur_standard) || erreur_standard == 0) {
+  if (length(boot_results) < 10) {
+    erreur_standard <- NA_real_
     statistique_t <- NA_real_
     p_value <- NA_real_
     ic_95_bas <- NA_real_
     ic_95_haut <- NA_real_
-    commentaire <- "Erreur standard non calculable"
+    methode_se <- "Bootstrap par commune"
+    commentaire <- "Bootstrap insuffisant"
   } else {
+    erreur_standard <- stats::sd(boot_results)
     statistique_t <- estimateur_as / erreur_standard
     p_value <- 2 * (1 - stats::pnorm(abs(statistique_t)))
-    ic_95_bas <- estimateur_as - 1.96 * erreur_standard
-    ic_95_haut <- estimateur_as + 1.96 * erreur_standard
+    ic_95_bas <- stats::quantile(
+      boot_results,
+      0.025,
+      na.rm = TRUE,
+      names = FALSE
+    )
+    ic_95_haut <- stats::quantile(
+      boot_results,
+      0.975,
+      na.rm = TRUE,
+      names = FALSE
+    )
+    methode_se <- paste0(
+      "Bootstrap par commune, ",
+      length(boot_results),
+      "/",
+      n_bootstrap,
+      " réplications réussies"
+    )
     
     commentaire <- ifelse(
       isTRUE(placebo_rejet),
       "AS estimé mais placebo rejette les pré-tendances",
-      "OK - SE HC1 sur switchers, placebo non rejeté"
+      "OK - bootstrap, placebo non rejeté"
     )
   }
-  
-  tibble::tibble(
-    type_lca = groupe_lca,
-    traitement = nom_traitement,
-    variable_dependante = "log(productivite)",
-    seuil_switcher = seuil_switcher_traitement,
-    estimateur_as = estimateur_as,
-    erreur_standard = erreur_standard,
-    statistique_t = statistique_t,
-    p_value = p_value,
-    ic_95_bas = ic_95_bas,
-    ic_95_haut = ic_95_haut,
-    placebo_estimate = placebo_estimate,
-    placebo_erreur_standard = placebo_erreur_standard,
-    placebo_statistique_t = placebo_statistique_t,
-    placebo_p_value = placebo_p_value,
-    placebo_rejet = placebo_rejet,
-    n_communes = dplyr::n_distinct(df_trim$id),
-    n_stayers = n_stayers,
-    n_switchers = n_switchers,
-    n_bootstrap_reussis = 200
-  )
-}
 
 # -----------------------------------------------------------------------------
 # 4. Estimations par type agricole
