@@ -136,12 +136,6 @@ estimer_as_seuil <- function(df_base, seuil, nom_traitement) {
   # ---------------------------------------------------------------------------
   # Test placebo des tendances parallèles
   # ---------------------------------------------------------------------------
-  # On teste si la variation future du traitement, D3 - D2,
-  # explique la variation passée de l'outcome, Y2 - Y1.
-  #
-  # Si le coefficient de delta_D est significatif, cela suggère un problème
-  # de tendances parallèles.
-  # ---------------------------------------------------------------------------
   
   placebo_result <- tryCatch(
     {

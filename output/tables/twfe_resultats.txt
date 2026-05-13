@@ -1,0 +1,30 @@
+                                Forêt Lisière Forêt .. Lisièr.. Forêt x..
+Dependent Var.:                      Y        Y        Y        Y         Y
+                                                                           
+pct_foret                     -0.0003           -0.0002  -0.0003           
+                              (0.0007)          (0.0008) (0.0007)          
+pct_lisiere                            -5.41e-5  1.83e-5          -0.0003  
+                                       (0.0020) (0.0020)          (0.0021) 
+pct_agri                                         9.06e-5                   
+                                                (0.0003)                   
+pct_lisiere x type_lcaannuel                             -0.0035           
+                                                         (0.0045)          
+pct_lisiere x type_lcamixte                              -0.0008           
+                                                         (0.0021)          
+pct_lisiere x type_lcaperenne                             0.0058           
+                                                         (0.0068)          
+pct_foret x type_lcaannuel                                        -0.0016**
+                                                                  (0.0006) 
+pct_foret x type_lcamixte                                          0.0014  
+                                                                  (0.0016) 
+pct_foret x type_lcaperenne                                       -0.0011  
+                                                                  (0.0017) 
+Fixed-Effects:                -------- -------- -------- -------- ---------
+id                                 Yes      Yes      Yes      Yes       Yes
+periode                            Yes      Yes      Yes      Yes       Yes
+_____________________________ ________ ________ ________ ________ _________
+S.E.: Clustered                 by: id   by: id   by: id   by: id    by: id
+Observations                    90,444   90,444   90,444   85,064    85,064
+R2                             0.87260  0.87260  0.87260  0.88216   0.88218
+---
+Signif. codes: 0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1

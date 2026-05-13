@@ -29,8 +29,8 @@ message_step("Diagnostic du seuil de définition des switchers")
 # -----------------------------------------------------------------------------
 # Seuils d'intérêt à afficher sur l'histogramme
 
-seuil_foret = 0.05
-seuil_lisiere = 0.03
+seuil_foret = 0.035
+seuil_lisiere = 0.02
 
 # -----------------------------------------------------------------------------
 # 1. Charger la base
@@ -113,7 +113,7 @@ calculer_diagnostic_seuils <- function(delta_df) {
       ),
       seuils = purrr::map(
         max_graphe,
-        ~ seq(from = 0, to = .x, length.out = 200)
+        ~ seq(from = 0, to = .x, length.out = 400)
       ),
       table_seuils = purrr::map2(
         data,
@@ -155,6 +155,7 @@ calculer_diagnostic_seuils <- function(delta_df) {
   
   diagnostic
 }
+
 # -----------------------------------------------------------------------------
 # 3. Calcul des variations de traitement
 # -----------------------------------------------------------------------------
@@ -215,7 +216,7 @@ message("Diagnostic du seuil écrit dans output/tables/diagnostic_seuil_switcher
 xmax_hist <- 1
 
 # Largeur des bins de l'histogramme
-largeur_bin_hist <- 0.01
+largeur_bin_hist <- 0.005
 
 # Fonction locale pour produire un histogramme par traitement
 faire_histogramme_traitement <- function(data, traitement_cible, fichier_sortie) {

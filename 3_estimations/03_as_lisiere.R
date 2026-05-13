@@ -25,7 +25,7 @@ message_step("Estimation AS : effet de la lisière")
 # 1. Paramètres
 # -----------------------------------------------------------------------------
 
-seuil_switcher <- 0.03
+seuil_switcher <- 0.02
 n_bootstrap <- 200
 set.seed(123)
 
@@ -122,66 +122,12 @@ df_large <- df_long %>%
   )
 
 # -----------------------------------------------------------------------------
-# 5. Test placebo des tendances parallèles
-# -----------------------------------------------------------------------------
-
-modele_placebo <- lm(
-  delta_logY_pre ~ D1 + delta_D,
-  data = df_large,
-  na.action = na.omit
-)
-
-placebo_table <- broom::tidy(modele_placebo)
-
-write_csv2(
-  placebo_table,
-  path("output", "tables", "as_lisiere_placebo.csv")
-)
-
-print(summary(modele_placebo))
-
-# -----------------------------------------------------------------------------
-# 5b. Graphique placebo
-# -----------------------------------------------------------------------------
-
-coef_placebo <- broom::tidy(modele_placebo)
-beta_delta <- stats::coef(modele_placebo)[["delta_D"]]
-p_delta <- coef_placebo$p.value[coef_placebo$term == "delta_D"]
-
-figure_placebo <- ggplot2::ggplot(
-  df_large,
-  ggplot2::aes(x = delta_D, y = delta_logY_pre)
-) +
-  ggplot2::geom_point(alpha = 0.05) +
-  ggplot2::geom_smooth(
-    method = "lm", se = TRUE, color = "#C00000"
-  ) +
-  ggplot2::labs(
-    title = "Test placebo : variation future de lisière vs pré-tendance des rendements",
-    subtitle = sprintf(
-      "β = %.3f, p = %.3f — pente non significative",
-      beta_delta, p_delta
-    ),
-    x = expression(paste(Delta, D[23], " (variation lisière 2000–2012)")),
-    y = expression(paste(Delta, "log ", Y[12], " (variation rendements 1988–2000)"))
-  ) +
-  ggplot2::theme_minimal()
-
-ggplot2::ggsave(
-  filename = path("output", "figures", "lisiere_placebo.png"),
-  plot = figure_placebo,
-  width = 7,
-  height = 5,
-  dpi = 300
-)
-
-# -----------------------------------------------------------------------------
-# 6. Support commun et trimming
+# 5. Support commun et trimming
 # -----------------------------------------------------------------------------
 
 lower <- stats::quantile(
   df_large$D2[df_large$S == 0],
-  0.05,
+  0.0,
   na.rm = TRUE
 )
 
@@ -207,28 +153,65 @@ message(
 message("Nombre de stayers et switchers après trimming :")
 print(table(df_trim$S))
 
-p_support <- ggplot2::ggplot(
-  df_trim,
+df_trim_plot <- df_trim %>%
+  dplyr::filter(D2 >= 0.1)
+
+p_support_effectifs <- ggplot2::ggplot(
+  df_trim_plot,
   ggplot2::aes(x = D2, fill = factor(S))
 ) +
-  ggplot2::geom_density(alpha = 0.4) +
+  ggplot2::geom_histogram(
+    binwidth = 0.1,
+    position = "dodge",
+    alpha = 0.75,
+    color = "white",
+    boundary = 0
+  ) +
   ggplot2::labs(
     title = "Support commun après trimming",
+    subtitle = "Part de lisière > 10% pour conserver une échelle d'effectifs lisible",
     x = "Part de lisière en 2000",
-    y = "Densité",
+    y = "Nombre de communes",
     fill = "Groupe"
   ) +
   ggplot2::scale_fill_discrete(
     labels = c("Stayers", "Switchers")
   ) +
+  ggplot2::scale_x_continuous(
+    limits = c(lower, upper),
+    breaks = scales::pretty_breaks(n = 8)
+  ) +
+  ggplot2::scale_y_continuous(
+    breaks = scales::pretty_breaks(n = 8)
+  ) +
   ggplot2::theme_minimal()
 
 ggplot2::ggsave(
-  filename = path("output", "figures", "lisiere_support_commun.png"),
-  plot = p_support,
+  filename = path("output", "figures", "lisiere_support_commun_effectifs.png"),
+  plot = p_support_effectifs,
   width = 8,
   height = 5,
   dpi = 300
+)
+
+# -----------------------------------------------------------------------------
+# 6. Test placebo des tendances parallèles
+# -----------------------------------------------------------------------------
+
+modele_placebo <- lm(
+  delta_logY_pre ~ D1 + delta_D,
+  data = df_trim,
+  na.action = na.omit
+)
+
+placebo_table <- broom::tidy(modele_placebo)
+
+print(summary(modele_placebo))
+
+write.csv2(
+  placebo_table,
+  file = path("output", "tables", "as_lisiere_placebo.csv"),
+  row.names = FALSE
 )
 
 # -----------------------------------------------------------------------------
@@ -242,9 +225,16 @@ if (nrow(stayers) < 30 | nrow(switchers) < 30) {
   stop("Trop peu de stayers ou de switchers pour estimer l'AS.", call. = FALSE)
 }
 
-modele_stayers <- lm(
-  delta_logY ~ D2,
+k_gam <- min(10, floor(nrow(stayers) / 5))
+
+if (k_gam < 4) {
+  stop("Trop peu de stayers pour estimer un GAM flexible.", call. = FALSE)
+}
+
+modele_stayers <- mgcv::gam(
+  delta_logY ~ s(D2, k = k_gam),
   data = stayers,
+  method = "REML",
   na.action = na.omit
 )
 
@@ -288,72 +278,72 @@ ggplot2::ggsave(
 # 8. Bootstrap par commune
 # -----------------------------------------------------------------------------
 
-calculer_as <- function(data) {
+# calculer_as <- function(data) {
   
-  stayers_boot <- data %>% dplyr::filter(S == 0)
-  switchers_boot <- data %>% dplyr::filter(S == 1)
+#   stayers_boot <- data %>% dplyr::filter(S == 0)
+#   switchers_boot <- data %>% dplyr::filter(S == 1)
   
-  if (nrow(stayers_boot) < 30 | nrow(switchers_boot) < 30) {
-    return(NA_real_)
-  }
+#   if (nrow(stayers_boot) < 30 | nrow(switchers_boot) < 30) {
+#     return(NA_real_)
+#   }
   
-  mod <- lm(
-    delta_logY ~ D2,
-    data = stayers_boot,
-    na.action = na.omit
-  )
+#   mod <- lm(
+#     delta_logY ~ D2,
+#     data = stayers_boot,
+#     na.action = na.omit
+#   )
   
-  y_hat <- stats::predict(mod, newdata = switchers_boot)
+#   y_hat <- stats::predict(mod, newdata = switchers_boot)
   
-  sum(
-    switchers_boot$delta_D * (switchers_boot$delta_logY - y_hat),
-    na.rm = TRUE
-  ) /
-    sum(switchers_boot$delta_D^2, na.rm = TRUE)
-}
+#   sum(
+#     switchers_boot$delta_D * (switchers_boot$delta_logY - y_hat),
+#     na.rm = TRUE
+#   ) /
+#     sum(switchers_boot$delta_D^2, na.rm = TRUE)
+# }
 
-ids <- unique(df_trim$id)
-boot_results <- numeric(n_bootstrap)
+# ids <- unique(df_trim$id)
+# boot_results <- numeric(n_bootstrap)
 
-for (b in seq_len(n_bootstrap)) {
-  boot_ids <- sample(ids, size = length(ids), replace = TRUE)
+# for (b in seq_len(n_bootstrap)) {
+#   boot_ids <- sample(ids, size = length(ids), replace = TRUE)
   
-  boot_df <- purrr::map_dfr(
-    boot_ids,
-    ~ df_trim %>% dplyr::filter(id == .x)
-  )
+#   boot_df <- purrr::map_dfr(
+#     boot_ids,
+#     ~ df_trim %>% dplyr::filter(id == .x)
+#   )
   
-  boot_results[b] <- calculer_as(boot_df)
-}
+#   boot_results[b] <- calculer_as(boot_df)
+# }
 
-boot_results <- boot_results[!is.na(boot_results)]
+# boot_results <- boot_results[!is.na(boot_results)]
 
-se_delta <- stats::sd(boot_results)
-t_stat <- delta_AS / se_delta
-p_val <- 2 * (1 - stats::pnorm(abs(t_stat)))
-ci_low <- stats::quantile(boot_results, 0.025)
-ci_high <- stats::quantile(boot_results, 0.975)
+# se_delta <- stats::sd(boot_results)
+# t_stat <- delta_AS / se_delta
+# p_val <- 2 * (1 - stats::pnorm(abs(t_stat)))
+# ci_low <- stats::quantile(boot_results, 0.025)
+# ci_high <- stats::quantile(boot_results, 0.975)
 
-resultats_as <- tibble::tibble(
-  traitement = "lisiere",
-  variable_dependante = "log(productivite)",
-  seuil_switcher = seuil_switcher,
-  estimateur_as = delta_AS,
-  erreur_standard = se_delta,
-  statistique_t = t_stat,
-  p_value = p_val,
-  ic_95_bas = ci_low,
-  ic_95_haut = ci_high,
-  n_observations_trim = nrow(df_trim),
-  n_stayers = sum(df_trim$S == 0),
-  n_switchers = sum(df_trim$S == 1),
-  n_bootstrap_reussis = length(boot_results)
-)
+# resultats_as <- tibble::tibble(
+#   traitement = "lisiere",
+#   variable_dependante = "log(productivite)",
+#   seuil_switcher = seuil_switcher,
+#   estimateur_as = delta_AS,
+#   erreur_standard = se_delta,
+#   statistique_t = t_stat,
+#   p_value = p_val,
+#   ic_95_bas = ci_low,
+#   ic_95_haut = ci_high,
+#   n_observations_trim = nrow(df_trim),
+#   n_stayers = sum(df_trim$S == 0),
+#   n_switchers = sum(df_trim$S == 1),
+#   n_bootstrap_reussis = length(boot_results)
+# )
 
-write_csv2(
-  resultats_as,
-  path("output", "tables", "as_lisiere_resultats.csv")
-)
+# write_csv2(
+#   resultats_as,
+#   path("output", "tables", "as_lisiere_resultats.csv")
+# )
 
 message("Estimation AS lisière terminée.")
 
@@ -399,4 +389,9 @@ resultats_as <- tibble::tibble(
   n_stayers = sum(df_trim$S == 0),
   n_switchers = sum(df_trim$S == 1),
   methode_se = "HC1 sur switchers"
+)
+
+write_csv2(
+  resultats_as,
+  path("output", "tables", "as_lisiere_resultats.csv")
 )

@@ -13,8 +13,8 @@
 #   data/processed/twfe_data_enrichie.parquet
 #
 # Sorties :
-#   output/tables/resultats_twfe.txt
-#   output/tables/coefficients_twfe.csv
+#   output/tables/twfe_resultats.txt
+#   output/tables/twfe_coefficients.csv
 # -----------------------------------------------------------------------------
 
 source("R/packages.R")
@@ -145,7 +145,7 @@ table_twfe <- capture.output(
 
 writeLines(
   table_twfe,
-  path("output", "tables", "resultats_twfe.txt")
+  path("output", "tables", "twfe_resultats.txt")
 )
 
 # -----------------------------------------------------------------------------
@@ -160,8 +160,8 @@ coefficients_twfe <- purrr::imap_dfr(
 
 write_csv2(
   coefficients_twfe,
-  path("output", "tables", "coefficients_twfe.csv")
+  path("output", "tables", "twfe_coefficients.csv")
 )
 
-message("Résultats TWFE écrits dans output/tables/resultats_twfe.txt")
-message("Coefficients TWFE écrits dans output/tables/coefficients_twfe.csv")
+message("Résultats TWFE écrits dans output/tables/twfe_resultats.txt")
+message("Coefficients TWFE écrits dans output/tables/twfe_coefficients.csv")

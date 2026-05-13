@@ -24,8 +24,8 @@ message_step("Estimations AS par typologie agricole LCA")
 # 1. Paramètres
 # -----------------------------------------------------------------------------
 
-seuil_switcher_foret <- 0.05
-seuil_switcher_lisiere <- 0.03
+seuil_switcher_foret <- 0.035
+seuil_switcher_lisiere <- 0.02
 
 alpha_placebo <- 0.05
 
@@ -154,7 +154,7 @@ estimer_as <- function(data, traitement, nom_traitement, groupe_lca) {
   
   lower <- stats::quantile(
     df_large$D2[df_large$S == 0],
-    0.05,
+    0.0,
     na.rm = TRUE
   )
   
@@ -201,12 +201,6 @@ estimer_as <- function(data, traitement, nom_traitement, groupe_lca) {
   # ---------------------------------------------------------------------------
   # Test placebo des pré-tendances
   # ---------------------------------------------------------------------------
-  # On teste si le changement futur de traitement prédit la variation passée
-  # de productivité.
-  #
-  # Si placebo_p_value <= alpha_placebo, cela suggère que les pré-tendances
-  # sont différentes entre switchers et stayers.
-  # ---------------------------------------------------------------------------
   
   modele_placebo <- lm(
     delta_logY_pre ~ D2 + delta_D,
@@ -248,8 +242,14 @@ estimer_as <- function(data, traitement, nom_traitement, groupe_lca) {
   switchers <- df_trim %>%
     dplyr::filter(S == 1)
   
-  modele_stayers <- lm(
-    delta_logY ~ D2,
+  k_gam <- min(10, floor(nrow(stayers) / 5))
+  
+  if (k_gam < 4) {
+    stop("Trop peu de stayers pour estimer un GAM flexible.", call. = FALSE)
+  }
+  
+  modele_stayers <- mgcv::gam(
+    delta_logY ~ s(D2, k = k_gam),
     data = stayers,
     na.action = na.omit
   )
@@ -302,7 +302,7 @@ estimer_as <- function(data, traitement, nom_traitement, groupe_lca) {
   ) / denominateur
   
   # ---------------------------------------------------------------------------
-  # # Bootstrap par commune
+  # Bootstrap par commune
   # ---------------------------------------------------------------------------
   # calculer_as_boot <- function(data_boot) {
     
@@ -499,7 +499,7 @@ resultats <- purrr::map_dfr(types_lca, function(type) {
 
 readr::write_csv2(
   resultats,
-  path("output", "tables", "as_par_typologie_agricole.csv")
+  path("output", "tables", "as_par_type_lca.csv")
 )
 
 # -----------------------------------------------------------------------------
@@ -522,8 +522,7 @@ resultats_graph <- resultats %>%
     )
   )
 
-# Ajout éventuel des résultats totaux forêt et lisière,
-# si les fichiers correspondants existent.
+# Ajout des résultats totaux forêt et lisière
 fichier_total_lisiere <- path("output", "tables", "as_lisiere_resultats.csv")
 fichier_total_foret <- path("output", "tables", "as_foret_resultats.csv")
 

@@ -9,7 +9,7 @@
 required_packages <- c(
   "dplyr", "tidyr", "readr", "stringr", "purrr", "tibble", "forcats",
   "ggplot2", "arrow", "data.table", "fixest", "broom", "sandwich", "lmtest",
-  "cluster", "terra", "sf", "poLCA", "sandwich"
+  "cluster", "terra", "sf", "poLCA", "sandwich", "mgcv"
 )
 
 missing_packages <- required_packages[

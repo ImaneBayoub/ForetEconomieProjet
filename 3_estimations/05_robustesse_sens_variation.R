@@ -26,8 +26,8 @@ message_step("Estimation AS séparée pour hausses et baisses de forêt et de li
 # 1. Paramètres
 # -----------------------------------------------------------------------------
 
-seuil_switcher_foret <- 0.05
-seuil_switcher_lisiere <- 0.03
+seuil_switcher_foret <- 0.035
+seuil_switcher_lisiere <- 0.02
 
 alpha_placebo <- 0.05
 
@@ -190,8 +190,6 @@ estimer_as_sens <- function(df_large, traitement_cible, sens) {
         n_switchers = 0,
         lower_D2 = NA_real_,
         upper_D2 = NA_real_,
-        lower_pre = NA_real_,
-        upper_pre = NA_real_,
         methode_se = "HC1 sur switchers",
         commentaire = "Aucune observation exploitable"
       )
@@ -204,28 +202,12 @@ estimer_as_sens <- function(df_large, traitement_cible, sens) {
   
   lower_D2 <- stats::quantile(
     df_sens$D2[df_sens$S == 0],
-    0.05,
+    0.0,
     na.rm = TRUE
   )
   
   upper_D2 <- stats::quantile(
     df_sens$D2[df_sens$S == 0],
-    0.95,
-    na.rm = TRUE
-  )
-  
-  # ---------------------------------------------------------------------------
-  # Trimming optionnel sur les pré-tendances
-  # ---------------------------------------------------------------------------
-  
-  lower_pre <- stats::quantile(
-    df_sens$delta_logY_pre[df_sens$S == 0],
-    0.05,
-    na.rm = TRUE
-  )
-  
-  upper_pre <- stats::quantile(
-    df_sens$delta_logY_pre[df_sens$S == 0],
     0.95,
     na.rm = TRUE
   )
@@ -237,9 +219,7 @@ estimer_as_sens <- function(df_large, traitement_cible, sens) {
       !is.na(D2),
       !is.na(delta_D),
       D2 >= lower_D2,
-      D2 <= upper_D2,
-      delta_logY_pre >= lower_pre,
-      delta_logY_pre <= upper_pre
+      D2 <= upper_D2
     )
   
   n_stayers <- sum(df_trim$S == 0, na.rm = TRUE)
@@ -267,8 +247,6 @@ estimer_as_sens <- function(df_large, traitement_cible, sens) {
         n_switchers = n_switchers,
         lower_D2 = lower_D2,
         upper_D2 = upper_D2,
-        lower_pre = lower_pre,
-        upper_pre = upper_pre,
         methode_se = "HC1 sur switchers",
         commentaire = "Trop peu de stayers ou de switchers"
       )
@@ -278,7 +256,6 @@ estimer_as_sens <- function(df_large, traitement_cible, sens) {
   # ---------------------------------------------------------------------------
   # Test placebo des pré-tendances
   # ---------------------------------------------------------------------------
-  # On teste si le changement futur du traitement prédit la variation passée de Y.
   
   modele_placebo <- lm(
     delta_logY_pre ~ D2 + delta_D,
@@ -305,9 +282,16 @@ estimer_as_sens <- function(df_large, traitement_cible, sens) {
   switchers <- df_trim %>%
     dplyr::filter(S == 1)
   
-  modele_stayers <- lm(
-    delta_logY ~ D2 + delta_logY_pre,
+  k_gam <- min(10, floor(nrow(stayers) / 5))
+
+  if (k_gam < 4) {
+    stop("Trop peu de stayers pour estimer un GAM flexible.", call. = FALSE)
+  }
+
+  modele_stayers <- mgcv::gam(
+    delta_logY ~ s(D2, k = k_gam),
     data = stayers,
+    method = "REML",
     na.action = na.omit
   )
   
@@ -341,8 +325,6 @@ estimer_as_sens <- function(df_large, traitement_cible, sens) {
         n_switchers = n_switchers,
         lower_D2 = lower_D2,
         upper_D2 = upper_D2,
-        lower_pre = lower_pre,
-        upper_pre = upper_pre,
         methode_se = "HC1 sur switchers",
         commentaire = "Dénominateur AS nul"
       )
@@ -404,8 +386,6 @@ estimer_as_sens <- function(df_large, traitement_cible, sens) {
     n_switchers = n_switchers,
     lower_D2 = lower_D2,
     upper_D2 = upper_D2,
-    lower_pre = lower_pre,
-    upper_pre = upper_pre,
     methode_se = "HC1 sur switchers",
     commentaire = commentaire
   )
