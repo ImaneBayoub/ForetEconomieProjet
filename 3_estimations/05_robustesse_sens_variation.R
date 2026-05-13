@@ -190,8 +190,7 @@ estimer_as_sens <- function(df_large, traitement_cible, sens) {
         n_switchers = 0,
         lower_D2 = NA_real_,
         upper_D2 = NA_real_,
-        methode_se = "HC1 sur switchers",
-        commentaire = "Aucune observation exploitable"
+        n_bootstrap_reussis = 200
       )
     )
   }
@@ -247,8 +246,7 @@ estimer_as_sens <- function(df_large, traitement_cible, sens) {
         n_switchers = n_switchers,
         lower_D2 = lower_D2,
         upper_D2 = upper_D2,
-        methode_se = "HC1 sur switchers",
-        commentaire = "Trop peu de stayers ou de switchers"
+        n_bootstrap_reussis = 200
       )
     )
   }
@@ -325,7 +323,7 @@ estimer_as_sens <- function(df_large, traitement_cible, sens) {
         n_switchers = n_switchers,
         lower_D2 = lower_D2,
         upper_D2 = upper_D2,
-        methode_se = "HC1 sur switchers",
+        n_bootstrap_reussis = 200,
         commentaire = "Dénominateur AS nul"
       )
     )
@@ -386,8 +384,7 @@ estimer_as_sens <- function(df_large, traitement_cible, sens) {
     n_switchers = n_switchers,
     lower_D2 = lower_D2,
     upper_D2 = upper_D2,
-    methode_se = "HC1 sur switchers",
-    commentaire = commentaire
+    n_bootstrap_reussis = 200
   )
 }
 

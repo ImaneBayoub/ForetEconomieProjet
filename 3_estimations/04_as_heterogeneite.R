@@ -458,8 +458,7 @@ estimer_as <- function(data, traitement, nom_traitement, groupe_lca) {
     n_communes = dplyr::n_distinct(df_trim$id),
     n_stayers = n_stayers,
     n_switchers = n_switchers,
-    methode_se = methode_se,
-    commentaire = commentaire
+    n_bootstrap_reussis = 200
   )
 }
 

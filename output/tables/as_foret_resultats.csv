@@ -1,2 +1,2 @@
-traitement,variable_dependante,seuil_switcher,estimateur_as,erreur_standard,statistique_t,p_value,ic_95_bas,ic_95_haut,n_observations_trim,n_stayers,n_switchers,methode_se
-foret,log(productivite),0.035,4.82737629340549e-4,0.0017282883355824513,0.2793154471981444,0.7800027527083642,-0.0029047075084010555,0.0038701827670821532,19638,16607,3031,HC1 sur switchers
+traitement,variable_dependante,seuil_switcher,estimateur_as,erreur_standard,statistique_t,p_value,ic_95_bas,ic_95_haut,n_observations_trim,n_stayers,n_switchers,n_bootstrap_reussis
+foret,log(productivite),0.035,4.82737629340549e-4,0.0017282883355824513,0.2793154471981444,0.7800027527083642,-0.0029047075084010555,0.0038701827670821532,19638,16607,3031,200

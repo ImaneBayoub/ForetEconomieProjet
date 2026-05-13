@@ -395,7 +395,7 @@ resultats_as <- tibble::tibble(
   n_observations_trim = nrow(df_trim),
   n_stayers = sum(df_trim$S == 0),
   n_switchers = sum(df_trim$S == 1),
-  methode_se = "HC1 sur switchers"
+  n_bootstrap_reussis = 200
 )
 
 write_csv2(
