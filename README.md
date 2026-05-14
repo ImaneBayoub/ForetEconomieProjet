@@ -51,7 +51,7 @@ source("1_data_preparation/00_data_telechargement.R")
 
 ## Structure du dépôt
 
-Le dépôt est structuré de la manière suivante :
+Le dépôt est structuré de la façon suivante :
 
 ```text
 
@@ -116,16 +116,10 @@ Il lance l’ensemble des étapes principales du projet :
 - analyse d’hétérogénéité selon la typologie agricole ;
 - vérifications de robustesse.
 
-Pour lancer le pipeline complet :
-
-source("main.R")
-
 Attention : certaines étapes peuvent être longues, en particulier :
 
 - l’extraction des indicateurs d’occupation des sols par commune ;
-- la construction des variables de lisière agriculture-forêt ;
 - la construction de la typologie agricole par LCA.
-- Bases intermédiaires et finales
 
 Les scripts de préparation construisent notamment les bases suivantes dans data/processed/ :
 
