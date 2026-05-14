@@ -28,19 +28,19 @@ source("R/utils.R")
 # # Statistiques descriptives
 # source("2_statistiques_descriptives/01_typologie_lca_cultures.R")
 # source("2_statistiques_descriptives/02_ajouter_typologie_agricole.R")
-# source("2_statistiques_descriptives/03_figures_descriptives.R")
-# source("2_statistiques_descriptives/04_table_descriptive_rapport.R")
-# source("2_statistiques_descriptives/05_carte_lca_communes.R")
+source("2_statistiques_descriptives/03_figures_descriptives.R")
+source("2_statistiques_descriptives/04_table_descriptive_rapport.R")
+source("2_statistiques_descriptives/05_carte_lca_communes.R")
 
-# # Estimations
-# source("3_estimations/00_seuil_switchers.R")
-# source("3_estimations/01_twfe_benchmark.R")
+# Estimations
+source("3_estimations/00_seuil_switchers.R")
+source("3_estimations/01_twfe_benchmark.R")
 source("3_estimations/02_as_foret.R")
 source("3_estimations/03_as_lisiere.R")
 
 # Hétérogénéité
 source("3_estimations/04_analyse_heterogeneite.R")
 
-# # Robustesse
-# source("3_estimations/05_robustesse_sens_variation.R")
-# source("3_estimations/06_robustesse_seuil_switchers.R")
+# Robustesse
+source("3_estimations/05_robustesse_sens_variation.R")
+source("3_estimations/06_robustesse_seuil_switchers.R")

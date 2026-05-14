@@ -51,8 +51,10 @@ source("1_data_preparation/00_data_telechargement.R")
 
 ## Structure du dépôt
 
+Le dépôt est structuré de la manière suivante :
+
 ```text
-.
+
 ├── 1_data_preparation/
 │   ├── 00_data_telechargement.R
 │   ├── 01_agri_productivite.R
