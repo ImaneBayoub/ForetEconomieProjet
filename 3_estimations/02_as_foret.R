@@ -1,6 +1,6 @@
 # -----------------------------------------------------------------------------
 # 02_as_foret.R
-# Estimer l'effet AS (Average Slope of Switchers) de la variation de forêt
+# Estimer l'effet AS de la variation de couverture forestière
 # sur le log de la productivité agricole entre 2000 et 2012
 # -----------------------------------------------------------------------------
 # Entrées :
@@ -10,9 +10,7 @@
 # Sorties :
 #   output/tables/as_foret_resultats.csv
 #   output/tables/as_foret_placebo.csv
-#   output/tables/as_foret_sensibilite_seuil.csv
-#   output/figures/foret_support_commun.png
-#   output/figures/foret_tendance_stayers.png
+#   output/figures/foret_support_commun_effectifs.png
 # -----------------------------------------------------------------------------
 
 source("R/packages.R")
@@ -26,8 +24,13 @@ message_step("Estimation AS : effet de la forêt")
 # -----------------------------------------------------------------------------
 
 seuil_switcher <- 0.035
-n_bootstrap <- 200
+n_bootstrap    <- 200
 set.seed(123)
+
+# Active le parallélisme si {furrr} + {future} sont disponibles et qu'un plan
+# multisession a été configuré en amont (ex. future::plan(multisession)).
+use_parallel <- requireNamespace("furrr",  quietly = TRUE) &&
+                requireNamespace("future", quietly = TRUE)
 
 # -----------------------------------------------------------------------------
 # 2. Charger la base unique
@@ -59,7 +62,7 @@ check_required_cols(
 # -----------------------------------------------------------------------------
 # Y = log de la productivité agricole
 # D = part de forêt
-# Z = part de lisière, utilisée seulement comme variable descriptive
+# Z = part de lisière agriculture-forêt, utilisée seulement comme variable descriptive
 # -----------------------------------------------------------------------------
 
 df_long <- base %>%
@@ -143,9 +146,6 @@ df_trim <- df_large %>%
     D2 >= lower,
     D2 <= upper,
     S == 0 | abs(delta_D) > seuil_switcher
-  ) %>%
-  dplyr::mutate(
-    groupe = dplyr::if_else(S == 0, "Stayers", "Switchers")
   )
 
 message(
@@ -209,23 +209,19 @@ modele_placebo <- lm(
 
 placebo_table <- broom::tidy(modele_placebo)
 
-
 print(summary(modele_placebo))
 
-write_csv2(
+write.csv2(
   placebo_table,
-  path("output", "tables", "as_foret_placebo.csv")
+  file = path("output", "tables", "as_foret_placebo.csv"),
+  row.names = FALSE
 )
 
 # -----------------------------------------------------------------------------
 # 7. Estimation AS
 # -----------------------------------------------------------------------------
-# On approxime la tendance des stayers par un modèle linéaire simple :
-# delta_logY ~ D2.
-# Cette option est plus rapide et plus stable que GAM dans les grands panels.
-# -----------------------------------------------------------------------------
 
-stayers <- df_trim %>% dplyr::filter(S == 0)
+stayers   <- df_trim %>% dplyr::filter(S == 0)
 switchers <- df_trim %>% dplyr::filter(S == 1)
 
 if (nrow(stayers) < 30 | nrow(switchers) < 30) {
@@ -256,100 +252,103 @@ delta_AS <- with(
     sum(delta_D^2, na.rm = TRUE)
 )
 
-p_tendance <- ggplot2::ggplot(
-  df_trim,
-  ggplot2::aes(x = D2, y = delta_logY, color = factor(S))
-) +
-  ggplot2::geom_point(alpha = 0.25) +
-  ggplot2::geom_smooth(method = "lm", se = TRUE) +
-  ggplot2::labs(
-    title = "Évolution du log de productivité selon la forêt initiale",
-    x = "Part de forêt en 2000",
-    y = "Variation du log de productivité 2000-2012",
-    color = "Groupe"
-  ) +
-  ggplot2::scale_color_discrete(
-    labels = c("Stayers", "Switchers")
-  ) +
-  ggplot2::theme_minimal()
-
-ggplot2::ggsave(
-  filename = path("output", "figures", "foret_tendance_stayers.png"),
-  plot = p_tendance,
-  width = 8,
-  height = 5,
-  dpi = 300
-)
-
 # -----------------------------------------------------------------------------
-# 8. Bootstrap par commune
+# 8. Bootstrap par commune (version parallélisée)
 # -----------------------------------------------------------------------------
+# Pré-calcul des indices par id : le rééchantillonnage devient un simple lookup
+# + indexation, ce qui évite le `filter(id == .x)` répété de la boucle for
+# d'origine et accélère chaque réplication (séquentielle ou parallèle).
 
-calculer_as <- function(data) {
-  
-  stayers_boot <- data %>% dplyr::filter(S == 0)
-  switchers_boot <- data %>% dplyr::filter(S == 1)
-  
-  if (nrow(stayers_boot) < 30 | nrow(switchers_boot) < 30) {
+idx_par_id <- split(seq_len(nrow(df_trim)), df_trim$id)
+ids        <- names(idx_par_id)
+n_ids      <- length(ids)
+
+# k_gam est fixé sur l'échantillon complet des stayers (constant entre
+# réplications) pour garantir la comparabilité des modèles.
+k_gam_boot <- k_gam
+
+calculer_as_boot <- function() {
+
+  boot_ids  <- sample(ids, size = n_ids, replace = TRUE)
+  rows      <- unlist(idx_par_id[boot_ids], use.names = FALSE)
+  boot_df   <- df_trim[rows, , drop = FALSE]
+
+  stayers_b   <- boot_df[boot_df$S == 0, , drop = FALSE]
+  switchers_b <- boot_df[boot_df$S == 1, , drop = FALSE]
+
+  if (nrow(stayers_b) < 30 || nrow(switchers_b) < 30) {
     return(NA_real_)
   }
-  
-  mod <- lm(
-    delta_logY ~ D2,
-    data = stayers_boot,
-    na.action = na.omit
+
+  denom <- sum(switchers_b$delta_D^2, na.rm = TRUE)
+  if (is.na(denom) || denom == 0) {
+    return(NA_real_)
+  }
+
+  mod <- tryCatch(
+    mgcv::gam(
+      delta_logY ~ s(D2, k = k_gam_boot),
+      data      = stayers_b,
+      method    = "REML",
+      na.action = na.omit
+    ),
+    error = function(e) NULL
   )
-  
-  y_hat <- stats::predict(mod, newdata = switchers_boot)
-  
-  sum(
-    switchers_boot$delta_D * (switchers_boot$delta_logY - y_hat),
-    na.rm = TRUE
-  ) /
-    sum(switchers_boot$delta_D^2, na.rm = TRUE)
+
+  if (is.null(mod)) return(NA_real_)
+
+  y_hat <- stats::predict(mod, newdata = switchers_b)
+
+  sum(switchers_b$delta_D * (switchers_b$delta_logY - y_hat),
+      na.rm = TRUE) / denom
 }
 
-ids <- unique(df_trim$id)
-boot_results <- numeric(n_bootstrap)
-
-for (b in seq_len(n_bootstrap)) {
-  boot_ids <- sample(ids, size = length(ids), replace = TRUE)
-  
-  boot_df <- purrr::map_dfr(
-    boot_ids,
-    ~ df_trim %>% dplyr::filter(id == .x)
+boot_results <- if (use_parallel) {
+  furrr::future_map_dbl(
+    seq_len(n_bootstrap),
+    function(.) calculer_as_boot(),
+    .options = furrr::furrr_options(seed = TRUE)
   )
-  
-  boot_results[b] <- calculer_as(boot_df)
+} else {
+  vapply(seq_len(n_bootstrap), function(.) calculer_as_boot(), numeric(1))
 }
 
 boot_results <- boot_results[!is.na(boot_results)]
 
+message(sprintf(
+  "Bootstrap terminé : %d/%d réplications réussies.",
+  length(boot_results), n_bootstrap
+))
+
 se_delta <- stats::sd(boot_results)
-t_stat <- delta_AS / se_delta
-p_val <- 2 * (1 - stats::pnorm(abs(t_stat)))
-ci_low <- stats::quantile(boot_results, 0.025)
-ci_high <- stats::quantile(boot_results, 0.975)
+t_stat   <- delta_AS / se_delta
+p_val    <- 2 * (1 - stats::pnorm(abs(t_stat)))
+ci_low   <- stats::quantile(boot_results, 0.025)
+ci_high  <- stats::quantile(boot_results, 0.975)
 
 resultats_as <- tibble::tibble(
-  traitement = "foret",
-  variable_dependante = "log(productivite)",
-  seuil_switcher = seuil_switcher,
-  estimateur_as = delta_AS,
-  erreur_standard = se_delta,
-  statistique_t = t_stat,
-  p_value = p_val,
-  ic_95_bas = ci_low,
-  ic_95_haut = ci_high,
-  n_observations_trim = nrow(df_trim),
-  n_stayers = sum(df_trim$S == 0),
-  n_switchers = sum(df_trim$S == 1),
-  n_bootstrap_reussis = length(boot_results)
+  traitement              = "foret",
+  variable_dependante     = "log(productivite)",
+  seuil_switcher          = seuil_switcher,
+  estimateur_as           = delta_AS,
+  erreur_standard         = se_delta,
+  statistique_t           = t_stat,
+  p_value                 = p_val,
+  ic_95_bas               = ci_low,
+  ic_95_haut              = ci_high,
+  n_observations_trim     = nrow(df_trim),
+  n_stayers               = sum(df_trim$S == 0),
+  n_switchers             = sum(df_trim$S == 1),
+  n_bootstrap_reussis     = length(boot_results)
 )
 
 write_csv2(
   resultats_as,
   path("output", "tables", "as_foret_resultats.csv")
 )
+
+message("Résultats de l'estimation écrits dans output/tables/as_foret_resultats.csv")
+message("Résultats du test placebo écrits dans output/tables/as_foret_placebo.csv")
+message("Graphique du support commun avec effectifs écrit dans output/figures/foret_support_commun_effectifs.png")
 
 message("Estimation AS forêt terminée.")

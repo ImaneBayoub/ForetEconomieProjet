@@ -340,7 +340,18 @@ estimer_as_sens <- function(df_large, traitement_cible, sens) {
     residu_as ~ 0 + delta_D,
     data = switchers
   )
-  
+  k_gam <- min(10, floor(nrow(stayers) / 5))
+
+  if (k_gam < 4) {
+    stop("Trop peu de stayers pour estimer un GAM flexible.", call. = FALSE)
+  }
+
+  mod <- mgcv::gam(
+    delta_logY ~ s(D2, k = k_gam),
+    data = stayers_boot,
+    method = "REML",
+    na.action = na.omit
+  )
   vcov_as <- sandwich::vcovHC(
     modele_as,
     type = "HC1"

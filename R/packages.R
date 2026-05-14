@@ -1,51 +1,53 @@
 # -----------------------------------------------------------------------------
 # Packages utilisés dans le projet
 # -----------------------------------------------------------------------------
-# Ce fichier centralise l'installation et le chargement des packages.
-# Si un package est manquant, il est automatiquement installé depuis CRAN,
-# puis chargé.
+# Ce fichier centralise le chargement des packages.
+# Si un package est manquant, il est seulement signalé : aucune installation
+# automatique n'est lancée, et le script ne s'arrête pas.
 # -----------------------------------------------------------------------------
 
 required_packages <- c(
   "dplyr", "tidyr", "readr", "stringr", "purrr", "tibble", "forcats",
   "ggplot2", "arrow", "data.table", "fixest", "broom", "sandwich", "lmtest",
-  "cluster", "terra", "sf", "poLCA", "sandwich", "mgcv"
+  "cluster", "terra", "sf", "poLCA", "mgcv", "furrr", "future"
 )
 
-missing_packages <- required_packages[
-  !vapply(required_packages, requireNamespace, logical(1), quietly = TRUE)
+# Supprimer les doublons éventuels
+required_packages <- unique(required_packages)
+
+available_packages <- required_packages[
+  vapply(required_packages, requireNamespace, logical(1), quietly = TRUE)
 ]
+
+missing_packages <- setdiff(required_packages, available_packages)
 
 if (length(missing_packages) > 0) {
-  message(
-    "Packages manquants détectés : ",
-    paste(missing_packages, collapse = ", ")
-  )
-  
-  message("Installation des packages manquants depuis CRAN...")
-  
-  install.packages(
-    missing_packages,
-    repos = "https://cloud.r-project.org"
-  )
-}
-
-# Vérification après installation
-still_missing <- required_packages[
-  !vapply(required_packages, requireNamespace, logical(1), quietly = TRUE)
-]
-
-if (length(still_missing) > 0) {
-  stop(
-    "Certains packages n'ont pas pu être installés : ",
-    paste(still_missing, collapse = ", "),
-    "\nInstallez-les manuellement puis relancez le script.",
+  warning(
+    "Packages manquants non chargés : ",
+    paste(missing_packages, collapse = ", "),
+    "\nCertaines parties du pipeline peuvent ne pas fonctionner si elles dépendent de ces packages",
+    "\n(à l'exception de furrr et de future, qui sont seulement optionnels)."
     call. = FALSE
   )
 }
 
+# Chargement uniquement des packages disponibles
 invisible(
-  lapply(required_packages, library, character.only = TRUE)
+  lapply(
+    available_packages,
+    function(pkg) {
+      suppressPackageStartupMessages(
+        library(pkg, character.only = TRUE)
+      )
+    }
+  )
 )
 
-message("Tous les packages nécessaires sont installés et chargés.")
+message(
+  "Packages chargés : ",
+  paste(available_packages, collapse = ", ")
+)
+
+if (length(missing_packages) == 0) {
+  message("Tous les packages nécessaires sont disponibles et chargés.")
+}
