@@ -48,10 +48,10 @@ data/raw/
 Le script suivant permet de télécharger ou de préparer une partie des fichiers nécessaires lorsque cela est possible :
 
 source("1_data_preparation/00_data_telechargement.R")
-Structure du dépôt
 
-Le dépôt est organisé de la manière suivante :
+## Structure du dépôt
 
+```text
 .
 ├── 1_data_preparation/
 │   ├── 00_data_telechargement.R
@@ -91,7 +91,9 @@ Le dépôt est organisé de la manière suivante :
 │
 ├── main.R
 └── README.md
-Reproduire le pipeline
+```
+
+## Reproduire le pipeline
 
 Le fichier principal est :
 
